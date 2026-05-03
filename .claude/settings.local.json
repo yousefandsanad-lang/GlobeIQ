@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create *)",
+      "Bash(export PATH=\"/usr/local/bin:/opt/homebrew/bin:$PATH\")",
+      "Read(//Users/essamnassar/**)",
+      "Bash(npm --version)",
+      "Bash(curl -s http://localhost:5173)",
+      "Bash(curl -s http://localhost:5174)",
+      "Bash(curl -s http://localhost:5173/src/App.jsx)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:5173)",
+      "Bash(curl -s -o /dev/null -w '%{http_code}' http://localhost:5173/src/__TRACKED_VAR__)",
+      "Bash(npm install *)",
+      "Bash(curl -s \"http://localhost:5173/src/components/WorldMap.jsx\")",
+      "Bash(node -e \"const c = require\\('./src/data/countries.js'\\); console.log\\('Total countries:', c.default.length\\); const withAliases = c.default.filter\\(x => x.aliases\\); console.log\\('With aliases:', withAliases.map\\(x => x.name + ': ' + JSON.stringify\\(x.aliases\\)\\).join\\('\\\\n'\\)\\); const byCont = {}; c.default.forEach\\(x => byCont[x.continent] = \\(byCont[x.continent]||0\\)+1\\); console.log\\('By continent:', JSON.stringify\\(byCont, null, 2\\)\\);\")",
+      "Bash(node --input-type=module)",
+      "Bash(curl -s --max-time 30 \"https://restcountries.com/v3.1/all?fields=name,cca3,ccn3,capital,population,region,subregion,borders,flag,altSpellings\" -o /tmp/countries_api.json)",
+      "Read(//tmp/**)",
+      "Bash(curl -s --max-time 30 \"https://restcountries.com/v3.1/all?fields=name,cca3,ccn3,capital,population,region,subregion,borders,flag,altSpellings,independent,unMember\" -o /tmp/countries_api.json)",
+      "Bash(curl -s --max-time 30 \"https://restcountries.com/v3.1/all?fields=name,ccn3,capital,population,region,subregion,borders,flag,altSpellings,unMember\" -o /tmp/countries_api.json)",
+      "Bash(node -e ' *)",
+      "Bash(node --input-type=module -e ' *)"
+    ]
+  }
+}

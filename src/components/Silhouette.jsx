@@ -1,0 +1,93 @@
+import { feature } from 'topojson-client'
+import { geoNaturalEarth1, geoPath } from 'd3-geo'
+import worldData from 'world-atlas/countries-110m.json'
+import { getContinentTheme } from '../utils/continentTheme'
+
+const countries = feature(worldData, worldData.objects.countries)
+
+export default function Silhouette({ continent, revealed, countryName, countryId }) {
+  const theme = getContinentTheme(continent)
+
+  const countryFeature = countries.features.find(
+    f => String(f.id) === String(countryId)
+  )
+
+  let pathD = null
+  if (countryFeature) {
+    const projection = geoNaturalEarth1().fitExtent([[30, 30], [170, 170]], countryFeature)
+    const pathGen = geoPath().projection(projection)
+    pathD = pathGen(countryFeature)
+  }
+
+  return (
+    <div
+      className="silhouette-pulse"
+      style={{
+        '--silhouette-glow': theme.glow,
+        position: 'relative',
+        width: 220,
+        height: 220,
+        background: theme.background,
+        border: `2px solid ${theme.primary}`,
+        borderRadius: 16,
+        boxShadow: `0 0 30px ${theme.glow}`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        margin: '0 auto',
+        overflow: 'hidden',
+      }}
+    >
+      <svg width="200" height="200" viewBox="0 0 200 200" overflow="hidden" style={{ overflow: 'hidden' }}>
+        <defs>
+          <clipPath id="silhouette-clip">
+            <rect x="0" y="0" width="200" height="200" />
+          </clipPath>
+        </defs>
+        {pathD ? (
+          <path
+            d={pathD}
+            fill={revealed ? theme.primary : '#ffffff'}
+            opacity={revealed ? 1 : 0.9}
+            stroke={theme.background}
+            strokeWidth={0.5}
+            clipPath="url(#silhouette-clip)"
+          />
+        ) : (
+          <text
+            x="100"
+            y="100"
+            textAnchor="middle"
+            dominantBaseline="central"
+            fill="white"
+            fontSize="64"
+            fontWeight="bold"
+          >
+            ?
+          </text>
+        )}
+      </svg>
+
+      {revealed && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: `${theme.primary}CC`,
+            color: 'white',
+            fontWeight: 'bold',
+            fontSize: 20,
+            textAlign: 'center',
+            padding: 12,
+            borderRadius: 16,
+          }}
+        >
+          {countryName}
+        </div>
+      )}
+    </div>
+  )
+}
