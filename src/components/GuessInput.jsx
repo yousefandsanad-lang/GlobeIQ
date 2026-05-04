@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 
-export default function GuessInput({ onGuess, disabled, countries, countryNames, previousGuesses }) {
+export default function GuessInput({ onGuess, disabled, countries, countryNames, previousGuesses, puzzleKey }) {
   const [value, setValue] = useState('')
   const [showDropdown, setShowDropdown] = useState(false)
   const [dropdownDirection, setDropdownDirection] = useState('down')
@@ -8,6 +8,14 @@ export default function GuessInput({ onGuess, disabled, countries, countryNames,
   const [shaking, setShaking] = useState(false)
   const errorTimerRef = useRef(null)
   const containerRef = useRef(null)
+  const inputRef = useRef(null)
+
+  useEffect(() => {
+    if (inputRef.current && !disabled) {
+      const t = setTimeout(() => { inputRef.current?.focus() }, 500)
+      return () => clearTimeout(t)
+    }
+  }, [puzzleKey])
 
   useEffect(() => () => clearTimeout(errorTimerRef.current), [])
 
@@ -96,6 +104,7 @@ export default function GuessInput({ onGuess, disabled, countries, countryNames,
       </div>
 
       <input
+        ref={inputRef}
         type="text"
         className={shaking ? 'input-shake' : ''}
         value={value}

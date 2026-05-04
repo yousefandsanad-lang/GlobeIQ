@@ -196,6 +196,7 @@ function App() {
               countries={countries}
               countryNames={countryNames}
               previousGuesses={guesses}
+              puzzleKey={currentCountry?.id}
             />
           </>
         )}
