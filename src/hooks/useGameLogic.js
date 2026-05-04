@@ -55,19 +55,17 @@ export default function useGameLogic(collectedCountries = []) {
 
   useEffect(() => {
     let restored = null
+    const todaysCountry = pickFromAvailable()
     try {
       const raw = localStorage.getItem(STORAGE_KEY)
       if (raw) {
         const saved = JSON.parse(raw)
-        if (saved.date === todayKey()) {
-          const country = countries.find(c => c.id === saved.countryId)
-          if (country) {
-            restored = {
-              country,
-              guesses: saved.guesses ?? [],
-              guessCount: saved.guessCount ?? 0,
-              gameStatus: saved.gameStatus ?? 'playing',
-            }
+        if (saved.date === todayKey() && saved.countryId === todaysCountry.id) {
+          restored = {
+            country: todaysCountry,
+            guesses: saved.guesses ?? [],
+            guessCount: saved.guessCount ?? 0,
+            gameStatus: saved.gameStatus ?? 'playing',
           }
         }
       }
