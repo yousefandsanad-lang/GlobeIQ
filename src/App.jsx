@@ -23,7 +23,8 @@ countries.forEach(c => {
 })
 
 function App() {
-  const { collectedCountries, addToAtlas } = useAtlas()
+  const { user, signInWithGoogle, signInWithMagicLink, signOut } = useAuth()
+  const { collectedCountries, addToAtlas } = useAtlas(user)
 
   const {
     currentCountry,
@@ -33,9 +34,8 @@ function App() {
     makeGuess,
     resetGame,
   } = useGameLogic(collectedCountries)
-  const { currentStreak, bestStreak, recordWin, recordLoss } = useStreak()
+  const { currentStreak, bestStreak, recordWin, recordLoss } = useStreak(user)
   const { switchMode } = usePuzzleMode()
-  const { user, signInWithGoogle, signInWithMagicLink, signOut } = useAuth()
 
   const [revealDismissed, setRevealDismissed] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)

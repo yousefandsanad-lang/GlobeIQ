@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { syncStreakToCloud, loadStreakFromCloud } from '../utils/syncService'
 
 const STORAGE_KEY = 'globeiq_streak'
 
@@ -13,35 +14,66 @@ function getYesterdayString() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-function persist(currentStreak, bestStreak, lastPlayedDate) {
+function readLocal() {
   try {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({ currentStreak, bestStreak, lastPlayedDate })
-    )
-  } catch {
-    // ignore quota / unavailable storage
-  }
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      return {
+        currentStreak: typeof parsed.currentStreak === 'number' ? parsed.currentStreak : 0,
+        bestStreak: typeof parsed.bestStreak === 'number' ? parsed.bestStreak : 0,
+        lastPlayedDate: typeof parsed.lastPlayedDate === 'string' ? parsed.lastPlayedDate : null,
+      }
+    }
+  } catch {}
+  return { currentStreak: 0, bestStreak: 0, lastPlayedDate: null }
 }
 
-export default function useStreak() {
+function writeLocal(currentStreak, bestStreak, lastPlayedDate) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ currentStreak, bestStreak, lastPlayedDate }))
+  } catch {}
+}
+
+export default function useStreak(user) {
   const [currentStreak, setCurrentStreak] = useState(0)
   const [bestStreak, setBestStreak] = useState(0)
   const [lastPlayedDate, setLastPlayedDate] = useState(null)
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (raw) {
-        const parsed = JSON.parse(raw)
-        if (typeof parsed.currentStreak === 'number') setCurrentStreak(parsed.currentStreak)
-        if (typeof parsed.bestStreak === 'number') setBestStreak(parsed.bestStreak)
-        if (typeof parsed.lastPlayedDate === 'string') setLastPlayedDate(parsed.lastPlayedDate)
+    async function init() {
+      const local = readLocal()
+
+      if (user) {
+        const cloud = await loadStreakFromCloud(user.id)
+        if (cloud) {
+          // Take the higher values (cloud wins if it has more data)
+          const merged = {
+            currentStreak: Math.max(local.currentStreak, cloud.currentStreak),
+            bestStreak: Math.max(local.bestStreak, cloud.bestStreak),
+            lastPlayedDate: cloud.lastPlayedDate ?? local.lastPlayedDate,
+          }
+          setCurrentStreak(merged.currentStreak)
+          setBestStreak(merged.bestStreak)
+          setLastPlayedDate(merged.lastPlayedDate)
+          writeLocal(merged.currentStreak, merged.bestStreak, merged.lastPlayedDate)
+        } else {
+          setCurrentStreak(local.currentStreak)
+          setBestStreak(local.bestStreak)
+          setLastPlayedDate(local.lastPlayedDate)
+          // Push local data up to cloud
+          if (local.currentStreak > 0 || local.bestStreak > 0) {
+            syncStreakToCloud(user.id, local.currentStreak, local.bestStreak, local.lastPlayedDate)
+          }
+        }
+      } else {
+        setCurrentStreak(local.currentStreak)
+        setBestStreak(local.bestStreak)
+        setLastPlayedDate(local.lastPlayedDate)
       }
-    } catch {
-      // leave defaults
     }
-  }, [])
+    init()
+  }, [user?.id])
 
   function recordWin() {
     const today = getTodayString()
@@ -54,7 +86,8 @@ export default function useStreak() {
     setCurrentStreak(nextCurrent)
     setBestStreak(nextBest)
     setLastPlayedDate(today)
-    persist(nextCurrent, nextBest, today)
+    writeLocal(nextCurrent, nextBest, today)
+    if (user) syncStreakToCloud(user.id, nextCurrent, nextBest, today)
   }
 
   function recordLoss() {
@@ -63,7 +96,8 @@ export default function useStreak() {
 
     setCurrentStreak(0)
     setLastPlayedDate(today)
-    persist(0, bestStreak, today)
+    writeLocal(0, bestStreak, today)
+    if (user) syncStreakToCloud(user.id, 0, bestStreak, today)
   }
 
   function getStreak() {

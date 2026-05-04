@@ -1,39 +1,58 @@
 import { useState, useEffect } from 'react'
+import { createPlayerIfNotExists, syncAtlasToCloud, loadAtlasFromCloud } from '../utils/syncService'
 
 const STORAGE_KEY = 'globeiq_atlas'
 
-export default function useAtlas() {
+function readLocal() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed)) return parsed
+    }
+  } catch {}
+  return []
+}
+
+function writeLocal(ids) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(ids))
+  } catch {}
+}
+
+export default function useAtlas(user) {
   const [collectedCountries, setCollectedCountries] = useState([])
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (raw) {
-        const parsed = JSON.parse(raw)
-        if (Array.isArray(parsed)) {
-          setCollectedCountries(parsed)
-        }
+    async function init() {
+      const local = readLocal()
+
+      if (user) {
+        await createPlayerIfNotExists(user.id)
+        const cloud = await loadAtlasFromCloud(user.id)
+        const merged = [...new Set([...local, ...cloud])]
+        setCollectedCountries(merged)
+        writeLocal(merged)
+        if (merged.length > 0) syncAtlasToCloud(user.id, merged)
+      } else {
+        setCollectedCountries(local)
       }
-    } catch {
-      // ignore — leave default empty array
     }
-  }, [])
+    init()
+  }, [user?.id])
 
   function addToAtlas(countryId) {
     setCollectedCountries(prev => {
-      if (prev.includes(countryId)) return prev
-      const next = [...prev, countryId]
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
-      } catch {
-        // ignore quota / unavailable storage
-      }
+      if (prev.includes(String(countryId))) return prev
+      const next = [...prev, String(countryId)]
+      writeLocal(next)
+      if (user) syncAtlasToCloud(user.id, next)
       return next
     })
   }
 
   function hasCountry(countryId) {
-    return collectedCountries.includes(countryId)
+    return collectedCountries.includes(String(countryId))
   }
 
   function getAtlasCount() {
