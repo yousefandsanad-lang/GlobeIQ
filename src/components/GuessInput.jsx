@@ -149,14 +149,10 @@ export default function GuessInput({ onGuess, disabled, countries, countryNames,
                 cursor: 'pointer',
                 borderBottom: '1px solid #ffffff08',
                 color: 'white',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
               }}
               onMouseEnter={e => (e.currentTarget.style.background = '#ffffff12')}
               onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
             >
-              {c.flagEmoji && <span>{c.flagEmoji}</span>}
               <span>{c.name}</span>
             </li>
           ))}
