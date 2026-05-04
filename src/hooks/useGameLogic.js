@@ -35,8 +35,9 @@ function seededIndex(dateStr, poolSize) {
 }
 
 const DATE_OVERRIDES = {
-  '2026-05-04': '170', // Colombia (medium)  — launch day override
-  '2026-05-06': '250', // France   (easy)    — replaces Eritrea (hard)
+  '2026-05-04': '170', // Colombia     (medium) — launch day override
+  '2026-05-05': '710', // South Africa (easy)  — replaces Ethiopia (medium)
+  '2026-05-06': '250', // France       (easy)  — replaces Eritrea (hard)
   '2026-05-08': '152', // Chile    (medium)  — replaces Fiji (hard, no silhouette)
 }
 
