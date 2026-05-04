@@ -34,8 +34,16 @@ function seededIndex(dateStr, poolSize) {
   return Math.abs(hash) % poolSize
 }
 
+const DATE_OVERRIDES = {
+  '2026-05-04': '170', // Colombia (medium) — launch day override
+}
+
 function pickForDate(dateStr) {
   const sorted = [...countries].sort((a, b) => a.id.localeCompare(b.id))
+  const overrideId = DATE_OVERRIDES[dateStr]
+  if (overrideId) {
+    return sorted.find(c => c.id === overrideId) ?? sorted[seededIndex(dateStr, sorted.length)]
+  }
   return sorted[seededIndex(dateStr, sorted.length)]
 }
 
