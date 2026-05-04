@@ -39,19 +39,6 @@ function App() {
 
   const [revealDismissed, setRevealDismissed] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
-  const [showUserMenu, setShowUserMenu] = useState(false)
-  const userMenuRef = useRef(null)
-
-  useEffect(() => {
-    if (!showUserMenu) return
-    function handleClickOutside(e) {
-      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
-        setShowUserMenu(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [showUserMenu])
 
   useEffect(() => {
     if (gameStatus === 'playing') setRevealDismissed(false)
@@ -157,49 +144,22 @@ function App() {
           <div className="streak-badge">🔥 {currentStreak}</div>
           <div className="atlas-badge">🗺️ {collectedCountries.length}/195</div>
           {user ? (
-            <div ref={userMenuRef}>
-              <button
-                onClick={() => setShowUserMenu(v => !v)}
-                style={{
-                  background: 'none',
-                  border: '1px solid #ffffff30',
-                  borderRadius: 20,
-                  padding: '6px 14px',
-                  fontSize: 13,
-                  color: '#ccc',
-                  cursor: 'pointer',
-                }}
-              >
-                {user.email.split('@')[0]}
-              </button>
-              {showUserMenu && (
-                <div style={{
-                  position: 'absolute',
-                  top: '100%',
-                  right: 0,
-                  background: '#1a1a2e',
-                  border: '1px solid #ffffff20',
-                  borderRadius: 10,
-                  padding: '8px 0',
-                  minWidth: 200,
-                  zIndex: 9999,
-                }}>
-                  <div style={{ padding: '8px 16px', fontSize: 12, color: '#666' }}>
-                    Signed in as<br />
-                    <span style={{ color: '#999' }}>{user.email}</span>
-                  </div>
-                  <div style={{ height: 1, background: '#ffffff10', margin: '4px 0' }} />
-                  <div
-                    onClick={() => { signOut(); setShowUserMenu(false) }}
-                    style={{ padding: '10px 16px', fontSize: 13, color: '#E74C3C', cursor: 'pointer' }}
-                    onMouseEnter={e => (e.currentTarget.style.background = '#ffffff08')}
-                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                  >
-                    🚪 Sign Out
-                  </div>
-                </div>
-              )}
-            </div>
+            <button
+              onClick={() => {
+                if (window.confirm('Sign out of GlobeIQ?')) signOut()
+              }}
+              style={{
+                background: 'none',
+                border: '1px solid #ffffff30',
+                borderRadius: 20,
+                padding: '6px 14px',
+                fontSize: 13,
+                color: '#ccc',
+                cursor: 'pointer',
+              }}
+            >
+              {user.email.slice(0, 12)}...
+            </button>
           ) : (
             <button
               onClick={() => setShowAuthModal(true)}
