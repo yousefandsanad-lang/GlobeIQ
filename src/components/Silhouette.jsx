@@ -19,9 +19,13 @@ export default function Silhouette({ continent, revealed, countryName, countryId
 
   let pathD = null
   if (countryFeature) {
-    const projection = geoNaturalEarth1().fitExtent([[30, 30], [170, 170]], countryFeature)
-    const pathGen = geoPath().projection(projection)
-    pathD = pathGen(countryFeature)
+    try {
+      const projection = geoNaturalEarth1().fitExtent([[30, 30], [170, 170]], countryFeature)
+      const pathGen = geoPath().projection(projection)
+      pathD = pathGen(countryFeature)
+    } catch {
+      pathD = null
+    }
   }
 
   return (
@@ -41,9 +45,17 @@ export default function Silhouette({ continent, revealed, countryName, countryId
         justifyContent: 'center',
         margin: '0 auto',
         overflow: 'hidden',
+        WebkitTransform: 'translateZ(0)',
+        willChange: 'transform',
       }}
     >
-      <svg width="200" height="200" viewBox="0 0 200 200" overflow="hidden" style={{ overflow: 'hidden' }}>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="200"
+        height="200"
+        viewBox="0 0 200 200"
+        style={{ overflow: 'hidden' }}
+      >
         <defs>
           <clipPath id="silhouette-clip">
             <rect x="0" y="0" width="200" height="200" />
