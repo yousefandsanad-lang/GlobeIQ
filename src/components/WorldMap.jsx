@@ -43,19 +43,21 @@ export default function WorldMap({ collectedCountries = [], currentCountryId, al
         height: '100vh',
         zIndex: 0,
         pointerEvents: 'none',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
       }}
     >
       <svg
         viewBox="0 0 1000 500"
-        preserveAspectRatio="xMidYMid slice"
+        preserveAspectRatio="xMidYMid meet"
         style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
           width: '100%',
           height: '100%',
+          minWidth: '100vw',
+          minHeight: '100vh',
+          pointerEvents: 'none',
         }}
-        style={{ pointerEvents: 'none' }}
       >
         {featureCollection.features.map((f, idx) => {
           const id = extractId(f)
