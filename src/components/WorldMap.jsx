@@ -46,8 +46,6 @@ export default function WorldMap({ collectedCountries = [], currentCountryId, al
         height: '100vh',
         zIndex: 0,
         pointerEvents: 'none',
-        WebkitTransform: 'translateZ(0)',
-        willChange: 'transform',
       }}
     >
       <svg
