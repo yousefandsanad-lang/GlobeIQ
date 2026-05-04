@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import useGameLogic from './hooks/useGameLogic'
 import useAtlas from './hooks/useAtlas'
 import useStreak from './hooks/useStreak'
@@ -13,6 +13,7 @@ import WorldMap from './components/WorldMap'
 import HowToPlay from './components/HowToPlay'
 import AuthModal from './components/AuthModal'
 import { generateShareText } from './utils/shareCard'
+import { playCorrect, playWrong, playReveal, playStreak } from './utils/sound'
 import countries from './data/countries'
 
 
@@ -69,6 +70,27 @@ function App() {
       recordLoss()
     }
   }, [gameStatus, currentCountry])
+
+  // Sound effects — skip firing on initial mount/restore
+  const soundReadyRef = useRef(false)
+  useEffect(() => {
+    if (!soundReadyRef.current) { soundReadyRef.current = true; return }
+    if (gameStatus === 'won') {
+      playCorrect()
+      playReveal()
+      if (currentStreak >= 1) playStreak()
+    } else if (gameStatus === 'lost') {
+      playWrong()
+    }
+  }, [gameStatus])
+
+  const prevGuessCountRef = useRef(null)
+  useEffect(() => {
+    if (prevGuessCountRef.current !== null && guessCount > prevGuessCountRef.current && gameStatus === 'playing') {
+      playWrong()
+    }
+    prevGuessCountRef.current = guessCount
+  }, [guessCount, gameStatus])
 
   function handleShare() {
     if (!currentCountry) return
