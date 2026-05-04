@@ -355,43 +355,8 @@ function App() {
         )}
 
         {(gameStatus === 'won' || gameStatus === 'lost') && (
-          <div style={{ textAlign: 'center', padding: '16px 0 8px' }}>
-            {proUser ? (
-              <button
-                onClick={handleProBonus}
-                style={{
-                  background: '#4A90D9', color: '#fff', border: 'none',
-                  borderRadius: 12, padding: '12px 28px', fontWeight: 700,
-                  fontSize: 15, cursor: 'pointer',
-                }}
-              >
-                Play another →
-              </button>
-            ) : canPlayBonus() ? (
-              <>
-                <div style={{ color: '#888', fontSize: 13, marginBottom: 10 }}>
-                  Play another?&nbsp;
-                  <span style={{ color: '#fff', fontWeight: 600 }}>
-                    {FREE_BONUS_LIMIT - bonusPlaysToday} bonus puzzle{FREE_BONUS_LIMIT - bonusPlaysToday !== 1 ? 's' : ''} remaining
-                  </span>
-                </div>
-                <button
-                  onClick={() => setShowAdGate(true)}
-                  style={{
-                    background: '#1a2540', color: '#fff', border: '1px solid #4A90D940',
-                    borderRadius: 12, padding: '12px 24px', fontWeight: 700,
-                    fontSize: 15, cursor: 'pointer',
-                  }}
-                >
-                  🎬 Watch Ad for Bonus Puzzle
-                </button>
-              </>
-            ) : (
-              <div style={{ color: '#666', fontSize: 13, lineHeight: 1.6 }}>
-                No bonus puzzles left today.<br />
-                <span style={{ color: '#aaa' }}>Come back tomorrow or go Pro for unlimited!</span>
-              </div>
-            )}
+          <div style={{ textAlign: 'center', color: '#555', fontSize: 13, padding: '8px 0' }}>
+            Come back tomorrow for a new puzzle! 🌍
           </div>
         )}
 
@@ -412,14 +377,6 @@ function App() {
           collectedCountries={collectedCountries}
           allCountries={countries}
           onClose={() => setShowAtlasModal(false)}
-        />
-      )}
-      {showAdGate && (
-        <AdGate
-          onUnlock={handleUnlockBonus}
-          onClose={() => setShowAdGate(false)}
-          bonusPlaysToday={bonusPlaysToday}
-          FREE_BONUS_LIMIT={FREE_BONUS_LIMIT}
         />
       )}
     </div>

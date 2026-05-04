@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 
 const STORAGE_KEY = 'globeiq_mode'
-const FREE_BONUS_LIMIT = 3
+const FREE_BONUS_LIMIT = 0 // re-enable when AdSense is active
 
 function getTodayString() {
   const d = new Date()
@@ -45,7 +45,6 @@ export default function usePuzzleMode() {
 
   function canPlayBonus() {
     if (proUser) return true
-    if (bonusPlaysToday < FREE_BONUS_LIMIT) return true
     return false
   }
 
