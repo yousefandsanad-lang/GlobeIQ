@@ -3,6 +3,7 @@ import useGameLogic from './hooks/useGameLogic'
 import useAtlas from './hooks/useAtlas'
 import useStreak from './hooks/useStreak'
 import usePuzzleMode from './hooks/usePuzzleMode'
+import useAuth from './hooks/useAuth'
 import Silhouette from './components/Silhouette'
 import DifficultyAura from './components/DifficultyAura'
 import HintPanel from './components/HintPanel'
@@ -10,6 +11,7 @@ import GuessInput from './components/GuessInput'
 import RevealCard from './components/RevealCard'
 import WorldMap from './components/WorldMap'
 import HowToPlay from './components/HowToPlay'
+import AuthModal from './components/AuthModal'
 import { generateShareText } from './utils/shareCard'
 import countries from './data/countries'
 
@@ -32,8 +34,10 @@ function App() {
   } = useGameLogic(collectedCountries)
   const { currentStreak, bestStreak, recordWin, recordLoss } = useStreak()
   const { switchMode } = usePuzzleMode()
+  const { user, signInWithGoogle, signInWithMagicLink, signOut } = useAuth()
 
   const [revealDismissed, setRevealDismissed] = useState(false)
+  const [showAuthModal, setShowAuthModal] = useState(false)
 
   useEffect(() => {
     if (gameStatus === 'playing') setRevealDismissed(false)
@@ -115,6 +119,38 @@ function App() {
           </button>
           <div className="streak-badge">🔥 {currentStreak}</div>
           <div className="atlas-badge">🗺️ {collectedCountries.length}/195</div>
+          {user ? (
+            <button
+              onClick={signOut}
+              style={{
+                background: 'none',
+                border: '1px solid #ffffff30',
+                borderRadius: 20,
+                padding: '6px 14px',
+                fontSize: 13,
+                color: '#ccc',
+                cursor: 'pointer',
+              }}
+            >
+              {user.email.split('@')[0]}
+            </button>
+          ) : (
+            <button
+              onClick={() => setShowAuthModal(true)}
+              style={{
+                background: '#4A90D9',
+                border: 'none',
+                borderRadius: 20,
+                padding: '6px 14px',
+                fontSize: 13,
+                color: '#fff',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              Sign In
+            </button>
+          )}
         </div>
       </header>
 
@@ -169,6 +205,13 @@ function App() {
 
       {showHowToPlay && (
         <HowToPlay onClose={closeHowToPlay} />
+      )}
+      {showAuthModal && (
+        <AuthModal
+          onClose={() => setShowAuthModal(false)}
+          signInWithGoogle={signInWithGoogle}
+          signInWithMagicLink={signInWithMagicLink}
+        />
       )}
     </div>
   )
