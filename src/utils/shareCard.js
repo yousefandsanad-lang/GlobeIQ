@@ -1,6 +1,15 @@
-function generateShareText(country, guesses, won, puzzleNumber) {
+const LAUNCH_DATE = new Date('2026-05-04')
+
+function puzzleDay() {
+  const today = new Date()
+  const diff = Math.floor((today - LAUNCH_DATE) / 86400000)
+  return diff + 1
+}
+
+function generateShareText(country, guesses, won) {
+  const MAX = 7
   const squares = []
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < MAX; i++) {
     if (i < guesses.length) {
       const isCorrect = guesses[i].trim().toLowerCase() === country.name.toLowerCase()
       squares.push(isCorrect ? '🟢' : '🔴')
@@ -9,17 +18,13 @@ function generateShareText(country, guesses, won, puzzleNumber) {
     }
   }
 
-  const header = `🌍 GlobeIQ #${puzzleNumber}`
+  const header = `🌍 GlobeIQ — Day ${puzzleDay()}`
   const row = squares.join(' ')
-
   const result = won
-    ? `Guessed in ${guesses.length} hint${guesses.length === 1 ? '' : 's'}!`
-    : `The country was ${country.name}`
+    ? `Got it in ${guesses.length} hint${guesses.length === 1 ? '' : 's'}! 🎉`
+    : `Couldn't crack today's puzzle 🌍`
 
-  const factWords = country.funFact.split(/\s+/).slice(0, 8).join(' ')
-  const factLine = `${factWords}...`
-
-  return [header, row, result, factLine, '', 'Play at globeiq.com'].join('\n')
+  return [header, row, result, '', 'Play today\'s puzzle 👇', 'https://globe-iq-one.vercel.app'].join('\n')
 }
 
 export { generateShareText }

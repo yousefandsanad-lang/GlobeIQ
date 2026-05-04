@@ -27,13 +27,22 @@ function saveRecent(ids) {
   } catch {}
 }
 
+function seededIndex(dateStr, poolSize) {
+  let hash = 0
+  for (let i = 0; i < dateStr.length; i++) {
+    hash = (hash * 31 + dateStr.charCodeAt(i)) & 0xffffffff
+  }
+  return Math.abs(hash) % poolSize
+}
+
 function pickFromAvailable(collectedCountries) {
   const recent = loadRecent()
-  const afterCollected = countries.filter(c => !collectedCountries.includes(String(c.id)))
-  const pool = afterCollected.length > 0 ? afterCollected : countries
+  const sorted = [...countries].sort((a, b) => a.id.localeCompare(b.id))
+  const afterCollected = sorted.filter(c => !collectedCountries.includes(String(c.id)))
+  const pool = afterCollected.length > 0 ? afterCollected : sorted
   const afterRecent = pool.filter(c => !recent.includes(String(c.id)))
   const finalPool = afterRecent.length >= MIN_POOL ? afterRecent : pool
-  return finalPool[Math.floor(Math.random() * finalPool.length)]
+  return finalPool[seededIndex(todayKey(), finalPool.length)]
 }
 
 function addToRecent(id) {

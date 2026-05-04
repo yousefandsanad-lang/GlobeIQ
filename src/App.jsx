@@ -100,7 +100,6 @@ function App() {
       currentCountry,
       guesses,
       gameStatus === 'won',
-      currentCountry.id,
     )
     navigator.clipboard.writeText(text).then(() => {
       alert('Copied to clipboard!')
