@@ -24,7 +24,7 @@ function generateShareText(country, guesses, won) {
     ? `Got it in ${guesses.length} hint${guesses.length === 1 ? '' : 's'}! 🎉`
     : `Couldn't crack today's puzzle 🌍`
 
-  return [header, row, result, '', 'Play today\'s puzzle 👇', 'https://globe-iq-one.vercel.app'].join('\n')
+  return [header, row, result, '', 'Play today\'s puzzle 👇', 'https://globeiq.app'].join('\n')
 }
 
 export { generateShareText }
