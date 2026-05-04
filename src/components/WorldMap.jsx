@@ -26,7 +26,14 @@ function extractId(f) {
 export default function WorldMap({ collectedCountries = [], currentCountryId, allCountries = [] }) {
   const collectedSet = new Set(collectedCountries.map(String))
   const currentIdStr = currentCountryId != null ? String(currentCountryId) : null
-  const nameById = new Map(allCountries.map(c => [String(c.id), c.name]))
+  const nameById = new Map()
+  if (allCountries && allCountries.length > 0) {
+    allCountries.forEach(c => {
+      nameById.set(String(c.id), c.name)
+      nameById.set(c.id, c.name)
+      nameById.set(String(parseInt(c.id)), c.name)
+    })
+  }
   const [hoveredCountry, setHoveredCountry] = useState(null)
 
   return (
@@ -92,7 +99,7 @@ export default function WorldMap({ collectedCountries = [], currentCountryId, al
               style={isCollected ? { pointerEvents: 'auto', cursor: 'pointer' } : undefined}
               onMouseEnter={isCollected ? (e) => {
                 const name = nameById.get(idCoerced)
-                console.log('[WorldMap] hover:', name, idCoerced)
+                console.log('[WorldMap] hover:', name, idCoerced, 'allCountries length:', allCountries?.length, 'nameById size:', nameById.size)
                 if (name) setHoveredCountry({ name, x: e.clientX, y: e.clientY })
               } : undefined}
               onMouseMove={isCollected ? (e) => {
