@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 
 const GoogleG = () => (
   <svg width="18" height="18" viewBox="0 0 18 18" style={{ flexShrink: 0 }}>
@@ -30,14 +31,14 @@ export default function AuthModal({ onClose, signInWithGoogle, signInWithMagicLi
     }
   }
 
-  return (
+  return createPortal(
     <div
       onClick={onClose}
       style={{
         position: 'fixed',
         inset: 0,
         background: '#000000CC',
-        zIndex: 1000,
+        zIndex: 99999,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -55,6 +56,7 @@ export default function AuthModal({ onClose, signInWithGoogle, signInWithMagicLi
           width: '100%',
           boxSizing: 'border-box',
           position: 'relative',
+          zIndex: 100000,
         }}
       >
         {/* Close */}
@@ -189,6 +191,7 @@ export default function AuthModal({ onClose, signInWithGoogle, signInWithMagicLi
           Continue as Guest
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
