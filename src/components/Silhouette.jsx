@@ -44,12 +44,16 @@ export default function Silhouette({ continent, revealed, countryName, countryId
     f => String(f.id) === String(countryId)
   )
 
-  let pathD = null
+  let pathData = null
   if (countryFeature) {
     try {
-      const projection = geoNaturalEarth1().fitExtent([[25, 25], [175, 175]], countryFeature)
-      const pathGenerator = geoPath().projection(projection)
-      const bounds = pathGenerator.bounds(countryFeature)
+      const projection = geoNaturalEarth1()
+        .fitExtent([[25, 25], [175, 175]], countryFeature)
+
+      const bounds = geoPath()
+        .projection(projection)
+        .bounds(countryFeature)
+
       const currentCenterX = (bounds[0][0] + bounds[1][0]) / 2
       const currentCenterY = (bounds[0][1] + bounds[1][1]) / 2
       const translate = projection.translate()
@@ -57,14 +61,14 @@ export default function Silhouette({ continent, revealed, countryName, countryId
         translate[0] + (100 - currentCenterX),
         translate[1] + (100 - currentCenterY),
       ])
-      const pathGen = geoPath().projection(projection)
-      pathD = pathGen(countryFeature)
-    } catch {
-      pathD = null
+
+      pathData = geoPath().projection(projection)(countryFeature)
+    } catch (e) {
+      pathData = null
     }
   }
 
-  const isMissing = !pathD
+  const isMissing = !pathData
 
   return (
     <>
@@ -118,10 +122,17 @@ export default function Silhouette({ continent, revealed, countryName, countryId
         ) : (
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            width="200"
-            height="200"
+            xmlnsXlink="http://www.w3.org/1999/xlink"
+            version="1.1"
+            width={200}
+            height={200}
             viewBox="0 0 200 200"
-            style={{ overflow: 'hidden' }}
+            style={{
+              overflow: 'hidden',
+              WebkitBackfaceVisibility: 'hidden',
+              backfaceVisibility: 'hidden',
+              WebkitTransform: 'translate3d(0,0,0)',
+            }}
           >
             <defs>
               <clipPath id="silhouette-clip">
@@ -129,7 +140,7 @@ export default function Silhouette({ continent, revealed, countryName, countryId
               </clipPath>
             </defs>
             <path
-              d={pathD}
+              d={pathData}
               fill={revealed ? theme.primary : '#ffffff'}
               opacity={revealed ? 1 : 0.9}
               stroke={theme.background}
