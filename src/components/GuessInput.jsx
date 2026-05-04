@@ -4,11 +4,17 @@ export default function GuessInput({ onGuess, disabled, countries, countryNames,
   const [value, setValue] = useState('')
   const [showDropdown, setShowDropdown] = useState(false)
   const [dropdownDirection, setDropdownDirection] = useState('down')
+  const [userInteracted, setUserInteracted] = useState(false)
   const [error, setError] = useState('')
   const [shaking, setShaking] = useState(false)
   const errorTimerRef = useRef(null)
   const containerRef = useRef(null)
   const inputRef = useRef(null)
+
+  useEffect(() => {
+    setUserInteracted(false)
+    setShowDropdown(false)
+  }, [puzzleKey])
 
   useEffect(() => {
     if (inputRef.current && !disabled) {
@@ -81,10 +87,12 @@ export default function GuessInput({ onGuess, disabled, countries, countryNames,
   }
 
   function handleKeyDown(e) {
+    setUserInteracted(true)
     if (e.key === 'Enter') submit()
   }
 
   function handleChange(e) {
+    setUserInteracted(true)
     setValue(e.target.value)
     setShowDropdown(true)
   }
@@ -110,7 +118,18 @@ export default function GuessInput({ onGuess, disabled, countries, countryNames,
         value={value}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
+        onClick={() => {
+          setUserInteracted(true)
+          if (containerRef.current) {
+            const rect = containerRef.current.getBoundingClientRect()
+            const spaceBelow = window.innerHeight - rect.bottom
+            const spaceAbove = rect.top
+            setDropdownDirection(spaceBelow < 300 && spaceAbove > spaceBelow ? 'up' : 'down')
+          }
+          setShowDropdown(true)
+        }}
         onFocus={() => {
+          if (!userInteracted) return
           if (containerRef.current) {
             const rect = containerRef.current.getBoundingClientRect()
             const spaceBelow = window.innerHeight - rect.bottom
