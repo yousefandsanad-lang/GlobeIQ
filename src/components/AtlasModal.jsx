@@ -10,6 +10,18 @@ const CONTINENT_ORDER = [
   'Antarctica',
 ]
 
+const MOBILE_STYLE = `
+  @media (max-width: 399px) {
+    .atlas-grid { grid-template-columns: 1fr !important; }
+    .atlas-country-name { font-size: 11px !important; }
+    .atlas-modal-card {
+      width: 95% !important;
+      max-height: 85vh !important;
+      border-radius: 16px !important;
+    }
+  }
+`
+
 export default function AtlasModal({ collectedCountries, onClose, allCountries }) {
   const collectedSet = new Set(collectedCountries.map(String))
 
@@ -27,149 +39,166 @@ export default function AtlasModal({ collectedCountries, onClose, allCountries }
   const collected = collectedCountries.length
 
   return createPortal(
-    <div
-      onClick={onClose}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: '#000000CC',
-        zIndex: 99999,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
+    <>
+      <style>{MOBILE_STYLE}</style>
       <div
-        onClick={e => e.stopPropagation()}
+        onClick={onClose}
         style={{
           position: 'fixed',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          background: '#0F1420',
-          border: '1px solid #ffffff15',
-          borderRadius: 20,
-          width: '90%',
-          maxWidth: 480,
-          maxHeight: '80vh',
-          overflow: 'hidden',
+          inset: 0,
+          background: '#000000CC',
+          zIndex: 99999,
           display: 'flex',
-          flexDirection: 'column',
-          zIndex: 100000,
+          alignItems: 'center',
+          justifyContent: 'center',
         }}
       >
-        {/* Header */}
-        <div style={{
-          padding: 20,
-          borderBottom: '1px solid #ffffff10',
-          display: 'flex',
-          alignItems: 'flex-start',
-          justifyContent: 'space-between',
-          flexShrink: 0,
-        }}>
-          <div>
-            <div style={{ fontWeight: 700, color: '#fff', fontSize: 18 }}>
-              🗺️ Your Atlas
-            </div>
-            <div style={{ color: '#888', fontSize: 13, marginTop: 3 }}>
-              {collected} / {total} countries discovered
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#888',
-              fontSize: 20,
-              cursor: 'pointer',
-              lineHeight: 1,
-              padding: 0,
-              marginTop: 2,
-            }}
-          >
-            ✕
-          </button>
-        </div>
-
-        {/* Scrollable body */}
-        <div style={{ overflowY: 'auto', flex: 1, padding: 16 }}>
-          {CONTINENT_ORDER.map(continent => {
-            const countries = byContinent[continent]
-            if (!countries || countries.length === 0) return null
-
-            const sampleColor = countries.find(c => c.continentColor)?.continentColor ?? '#888'
-
-            return (
-              <div key={continent}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  marginTop: 16,
-                  marginBottom: 8,
-                }}>
-                  <div style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: '50%',
-                    background: sampleColor,
-                    flexShrink: 0,
-                  }} />
-                  <span style={{
-                    color: sampleColor,
-                    fontSize: 12,
-                    fontWeight: 700,
-                    textTransform: 'uppercase',
-                    letterSpacing: 1,
-                  }}>
-                    {continent}
-                  </span>
-                </div>
-
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: 6,
-                }}>
-                  {countries.map(c => {
-                    const isCollected = collectedSet.has(String(c.id))
-                    return (
-                      <div
-                        key={c.id}
-                        style={{
-                          background: isCollected ? '#ffffff10' : '#ffffff05',
-                          border: `1px solid ${isCollected ? '#ffffff20' : '#ffffff08'}`,
-                          borderRadius: 8,
-                          padding: '8px 10px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 8,
-                        }}
-                      >
-                        <span style={{ fontSize: 16, lineHeight: 1 }}>
-                          {isCollected ? c.flagEmoji : '🔒'}
-                        </span>
-                        <span style={{
-                          fontSize: 12,
-                          fontWeight: 600,
-                          color: isCollected ? '#fff' : '#555',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                        }}>
-                          {isCollected ? c.name : '????????'}
-                        </span>
-                      </div>
-                    )
-                  })}
-                </div>
+        <div
+          className="atlas-modal-card"
+          onClick={e => e.stopPropagation()}
+          style={{
+            position: 'fixed',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            background: '#0F1420',
+            border: '1px solid #ffffff15',
+            borderRadius: 20,
+            width: '90%',
+            maxWidth: 480,
+            maxHeight: '80vh',
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
+            zIndex: 100000,
+          }}
+        >
+          {/* Header */}
+          <div style={{
+            padding: 20,
+            borderBottom: '1px solid #ffffff10',
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'space-between',
+            flexShrink: 0,
+          }}>
+            <div>
+              <div style={{ fontWeight: 700, color: '#fff', fontSize: 18 }}>
+                🗺️ Your Atlas
               </div>
-            )
-          })}
+              <div style={{ color: '#888', fontSize: 13, marginTop: 3 }}>
+                {collected} / {total} countries discovered
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#888',
+                fontSize: 20,
+                cursor: 'pointer',
+                lineHeight: 1,
+                padding: 0,
+                marginTop: 2,
+              }}
+            >
+              ✕
+            </button>
+          </div>
+
+          {/* Scrollable body */}
+          <div style={{ overflowY: 'auto', flex: 1, padding: 16 }}>
+            {CONTINENT_ORDER.map(continent => {
+              const countries = byContinent[continent]
+              if (!countries || countries.length === 0) return null
+
+              const sampleColor = countries.find(c => c.continentColor)?.continentColor ?? '#888'
+
+              return (
+                <div key={continent}>
+                  <div style={{
+                    position: 'sticky',
+                    top: 0,
+                    background: '#0F1420',
+                    zIndex: 10,
+                    paddingTop: 8,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    marginBottom: 8,
+                  }}>
+                    <div style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: '50%',
+                      background: sampleColor,
+                      flexShrink: 0,
+                    }} />
+                    <span style={{
+                      color: sampleColor,
+                      fontSize: 12,
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      letterSpacing: 1,
+                    }}>
+                      {continent}
+                    </span>
+                  </div>
+
+                  <div
+                    className="atlas-grid"
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: 6,
+                      marginBottom: 8,
+                    }}
+                  >
+                    {countries.map(c => {
+                      const isCollected = collectedSet.has(String(c.id))
+                      return (
+                        <div
+                          key={c.id}
+                          style={{
+                            background: isCollected ? '#ffffff10' : '#ffffff05',
+                            border: `1px solid ${isCollected ? '#ffffff20' : '#ffffff08'}`,
+                            borderRadius: 8,
+                            padding: '10px 12px',
+                            minHeight: 44,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8,
+                            boxSizing: 'border-box',
+                          }}
+                        >
+                          <span style={{ fontSize: 16, lineHeight: 1, flexShrink: 0 }}>
+                            {isCollected ? c.flagEmoji : '🔒'}
+                          </span>
+                          <span
+                            className="atlas-country-name"
+                            style={{
+                              fontSize: 12,
+                              fontWeight: 600,
+                              color: isCollected ? '#fff' : '#555',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {isCollected ? c.name : '????????'}
+                          </span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         </div>
       </div>
-    </div>,
+    </>,
     document.body
   )
 }
