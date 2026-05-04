@@ -28,7 +28,7 @@ const countries = [
     knownFor: "Famous for Carnival celebrations, football passion and the Amazon rainforest",
     funFact: "The Brazilwood tree's vivid red heartwood was so prized by European traders in the 1500s that it single-handedly powered a nation's economy and gave the region its lasting name.",
     personalityTags: ["🌴 Amazon Giant", "⚽ Football Nation"],
-    continentColor: "#E85D4A",
+    continentColor: "#9B59B6",
   },
   {
     id: "124",
@@ -231,7 +231,7 @@ const countries = [
     knownFor: "Famous for tango, premium beef and the wild landscapes of Patagonia",
     funFact: "One major capital has more practicing therapists than New York, Paris, and London combined — reflecting the nation's distinctive mental-health culture.",
     personalityTags: ["💃 Tango Homeland", "⚽ Football Passion"],
-    continentColor: "#E85D4A",
+    continentColor: "#9B59B6",
   },
   {
     id: "040",
@@ -276,7 +276,7 @@ const countries = [
     knownFor: "Famous for the Atacama Desert, world-class wine and Easter Island",
     funFact: "Stretching 4,300 km north to south, this ribbon nation transitions from Earth's driest desert to sub-Antarctic glaciers — the longest latitudinal journey on a single landmass.",
     personalityTags: ["🌋 Ring of Fire", "🍷 Wine Nation"],
-    continentColor: "#E85D4A",
+    continentColor: "#9B59B6",
   },
   {
     id: "170",
@@ -291,7 +291,7 @@ const countries = [
     knownFor: "Famous for its coffee, emeralds and the global star Shakira",
     funFact: "Uniquely positioned with access to both the Pacific and Caribbean waters — a dual-ocean privilege shared by no other South American neighbor.",
     personalityTags: ["☕ Coffee King", "🌺 Flower Exporter"],
-    continentColor: "#E85D4A",
+    continentColor: "#9B59B6",
   },
   {
     id: "192",
@@ -684,7 +684,7 @@ const countries = [
     knownFor: "Famous for Angel Falls, beauty pageants and arepas",
     funFact: "A waterfall here plunges 979 m uninterrupted — so high that water vaporizes into mist before touching ground — the tallest of its kind on Earth.",
     personalityTags: ["💦 Angel Falls", "👸 Pageant Powerhouse"],
-    continentColor: "#E85D4A",
+    continentColor: "#9B59B6",
   },
 
   // ── Hard ──────────────────────────────────────────────────────────────────
@@ -941,7 +941,7 @@ const countries = [
     knownFor: "Famous for the Salar de Uyuni salt flats, Lake Titicaca and the city of La Paz",
     funFact: "The world's largest salt flat sprawls across the highlands — so flat that satellites use it for altitude calibration, and it holds half the world's lithium.",
     personalityTags: ["🧂 Mirror Salt Flats", "🏔️ Andean Heart"],
-    continentColor: "#E85D4A",
+    continentColor: "#9B59B6",
   },
   {
     id: "070",
@@ -1292,7 +1292,7 @@ const countries = [
     knownFor: "Famous for the Galápagos Islands, Andean highlands and being where Darwin developed his theory",
     funFact: "The equator runs through this nation, and its island territory hosted Charles Darwin's 1835 voyage — the empirical foundation for evolution theory.",
     personalityTags: ["🐢 Galápagos Wonder", "🌎 On the Equator"],
-    continentColor: "#E85D4A",
+    continentColor: "#9B59B6",
   },
   {
     id: "222",
@@ -1518,7 +1518,7 @@ const countries = [
     knownFor: "Famous for Kaieteur Falls, vast pristine rainforest and a sudden offshore oil boom",
     funFact: "A waterfall plunges 226 m unbroken — five times taller than Niagara — while newly discovered offshore oil has launched the world's fastest-growing economy.",
     personalityTags: ["💦 Kaieteur Falls", "🛢️ Sudden Oil Boom"],
-    continentColor: "#E85D4A",
+    continentColor: "#9B59B6",
   },
   {
     id: "332",
@@ -2305,7 +2305,7 @@ const countries = [
     knownFor: "Famous for its Jesuit ruins, Itaipu Dam and tereré (cold mate) culture",
     funFact: "Paraguay's flag is the only national flag with different designs on its front and back — and Itaipu Dam, shared with Brazil, is one of the largest hydroelectric power stations in the world.",
     personalityTags: ["🚩 Two-Sided Flag", "⚡ Itaipu Dam"],
-    continentColor: "#E85D4A",
+    continentColor: "#9B59B6",
   },
   {
     id: "604",
@@ -2320,7 +2320,7 @@ const countries = [
     knownFor: "Famous for Machu Picchu, llamas and ceviche cuisine",
     funFact: "Machu Picchu was built at 2,430 m altitude and was never discovered by Spanish conquistadors — it was only brought to global attention by American historian Hiram Bingham in 1911.",
     personalityTags: ["🏔️ Inca Empire", "🌿 Biodiversity Hub"],
-    continentColor: "#E85D4A",
+    continentColor: "#9B59B6",
   },
   {
     id: "634",
@@ -2651,7 +2651,7 @@ const countries = [
     knownFor: "Famous for its Dutch colonial architecture, Maroon culture and pristine rainforest",
     funFact: "Suriname is the only Dutch-speaking country in South America and the smallest sovereign state on the continent — yet about 93% of it is still covered by virgin Amazon rainforest.",
     personalityTags: ["🇳🇱 Dutch South America", "🌳 93% Rainforest"],
-    continentColor: "#E85D4A",
+    continentColor: "#9B59B6",
   },
   {
     id: "760",
@@ -2847,7 +2847,7 @@ const countries = [
     knownFor: "Famous for winning the first FIFA World Cup, mate culture and progressive social policies",
     funFact: "Uruguay won the very first FIFA World Cup, hosted on home soil in 1930 — and is the smallest country to ever win football's biggest trophy, which it has done twice.",
     personalityTags: ["⚽ First World Cup", "🍵 Mate Culture"],
-    continentColor: "#E85D4A",
+    continentColor: "#9B59B6",
   },
   {
     id: "860",
