@@ -35,14 +35,9 @@ function seededIndex(dateStr, poolSize) {
   return Math.abs(hash) % poolSize
 }
 
-function pickFromAvailable(collectedCountries) {
-  const recent = loadRecent()
+function pickFromAvailable() {
   const sorted = [...countries].sort((a, b) => a.id.localeCompare(b.id))
-  const afterCollected = sorted.filter(c => !collectedCountries.includes(String(c.id)))
-  const pool = afterCollected.length > 0 ? afterCollected : sorted
-  const afterRecent = pool.filter(c => !recent.includes(String(c.id)))
-  const finalPool = afterRecent.length >= MIN_POOL ? afterRecent : pool
-  return finalPool[seededIndex(todayKey(), finalPool.length)]
+  return sorted[seededIndex(todayKey(), sorted.length)]
 }
 
 function addToRecent(id) {
@@ -86,7 +81,7 @@ export default function useGameLogic(collectedCountries = []) {
       setGuessCount(restored.guessCount)
       setGameStatus(restored.gameStatus)
     } else {
-      const next = pickFromAvailable(collectedCountries)
+      const next = pickFromAvailable()
       addToRecent(next.id)
       setCurrentCountry(next)
     }
@@ -140,7 +135,7 @@ export default function useGameLogic(collectedCountries = []) {
   }
 
   function resetGame() {
-    const next = pickFromAvailable(collectedCountries)
+    const next = pickFromAvailable()
     addToRecent(next.id)
     setCurrentCountry(next)
     setGuesses([])
