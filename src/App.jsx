@@ -18,6 +18,54 @@ import { playCorrect, playWrong, playReveal, playStreak } from './utils/sound'
 import countries from './data/countries'
 
 
+function useCountdown() {
+  const [time, setTime] = useState('')
+  useEffect(() => {
+    function tick() {
+      const now = new Date()
+      const midnight = new Date(now)
+      midnight.setHours(24, 0, 0, 0)
+      const diff = midnight - now
+      const h = Math.floor(diff / 3600000)
+      const m = Math.floor((diff % 3600000) / 60000)
+      const s = Math.floor((diff % 60000) / 1000)
+      setTime(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`)
+    }
+    tick()
+    const id = setInterval(tick, 1000)
+    return () => clearInterval(id)
+  }, [])
+  return time
+}
+
+function AlreadyPlayedToday({ country }) {
+  const countdown = useCountdown()
+  return (
+    <div style={{ textAlign: 'center', padding: '32px 16px' }}>
+      <div style={{ fontSize: 40, marginBottom: 12 }}>{country.flagEmoji}</div>
+      <div style={{ color: '#fff', fontWeight: 700, fontSize: 18, marginBottom: 6 }}>
+        You already have {country.name}!
+      </div>
+      <div style={{ color: '#888', fontSize: 13, marginBottom: 24 }}>
+        You collected this country in your atlas.
+      </div>
+      <div style={{ color: '#888', fontSize: 12, marginBottom: 6 }}>Next puzzle in</div>
+      <div style={{
+        fontVariantNumeric: 'tabular-nums',
+        fontSize: 32,
+        fontWeight: 800,
+        color: '#4A90D9',
+        letterSpacing: 2,
+      }}>
+        {countdown}
+      </div>
+      <div style={{ color: '#555', fontSize: 11, marginTop: 8 }}>
+        Come back tomorrow for a new country 🌍
+      </div>
+    </div>
+  )
+}
+
 const countryNames = countries.map(c => c.name)
 countries.forEach(c => {
   if (c.aliases) countryNames.push(...c.aliases)
@@ -181,7 +229,11 @@ function App() {
       </header>
 
       <main className="game-area">
-        {gameStatus === 'playing' && (
+        {gameStatus === 'playing' && collectedCountries.includes(String(currentCountry.id)) && (
+          <AlreadyPlayedToday country={currentCountry} />
+        )}
+
+        {gameStatus === 'playing' && !collectedCountries.includes(String(currentCountry.id)) && (
           <>
             <DifficultyAura difficulty={currentCountry.difficulty} />
             <Silhouette
