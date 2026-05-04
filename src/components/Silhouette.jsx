@@ -47,7 +47,16 @@ export default function Silhouette({ continent, revealed, countryName, countryId
   let pathD = null
   if (countryFeature) {
     try {
-      const projection = geoNaturalEarth1().fitExtent([[30, 30], [170, 170]], countryFeature)
+      const projection = geoNaturalEarth1().fitExtent([[25, 25], [175, 175]], countryFeature)
+      const pathGenerator = geoPath().projection(projection)
+      const bounds = pathGenerator.bounds(countryFeature)
+      const currentCenterX = (bounds[0][0] + bounds[1][0]) / 2
+      const currentCenterY = (bounds[0][1] + bounds[1][1]) / 2
+      const translate = projection.translate()
+      projection.translate([
+        translate[0] + (100 - currentCenterX),
+        translate[1] + (100 - currentCenterY),
+      ])
       const pathGen = geoPath().projection(projection)
       pathD = pathGen(countryFeature)
     } catch {
