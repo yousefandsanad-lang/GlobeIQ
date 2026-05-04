@@ -146,7 +146,7 @@ function App() {
           {user ? (
             <button
               onClick={() => {
-                if (window.confirm('Sign out of GlobeIQ?')) signOut()
+                if (window.confirm(`Signed in as ${user.email}\n\nSign out of GlobeIQ?`)) signOut()
               }}
               style={{
                 background: 'none',
