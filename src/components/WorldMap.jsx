@@ -48,6 +48,7 @@ export default function WorldMap({ collectedCountries = [], currentCountryId, al
         preserveAspectRatio="xMidYMid slice"
         width="100%"
         height="100%"
+        style={{ pointerEvents: 'none' }}
       >
         {featureCollection.features.map((f, idx) => {
           const id = extractId(f)
@@ -88,9 +89,10 @@ export default function WorldMap({ collectedCountries = [], currentCountryId, al
               fill={fill}
               stroke={stroke}
               strokeWidth={strokeWidth}
-              style={isCollected ? { pointerEvents: 'auto', cursor: 'default' } : undefined}
+              style={isCollected ? { pointerEvents: 'auto', cursor: 'pointer' } : undefined}
               onMouseEnter={isCollected ? (e) => {
                 const name = nameById.get(idCoerced)
+                console.log('[WorldMap] hover:', name, idCoerced)
                 if (name) setHoveredCountry({ name, x: e.clientX, y: e.clientY })
               } : undefined}
               onMouseMove={isCollected ? (e) => {
