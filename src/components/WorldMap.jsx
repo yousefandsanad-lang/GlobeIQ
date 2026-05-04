@@ -6,7 +6,7 @@ import countries from '../data/countries'
 import { getContinentTheme } from '../utils/continentTheme'
 
 const featureCollection = feature(worldData, worldData.objects.countries)
-const projection = geoNaturalEarth1().scale(180).translate([500, 260])
+const projection = geoNaturalEarth1().scale(220).translate([500, 270])
 const pathGen = geoPath(projection)
 
 const gameById = new Map()
