@@ -12,6 +12,7 @@ import RevealCard from './components/RevealCard'
 import WorldMap from './components/WorldMap'
 import HowToPlay from './components/HowToPlay'
 import AuthModal from './components/AuthModal'
+import AtlasModal from './components/AtlasModal'
 import { generateShareText } from './utils/shareCard'
 import { playCorrect, playWrong, playReveal, playStreak } from './utils/sound'
 import countries from './data/countries'
@@ -39,6 +40,7 @@ function App() {
 
   const [revealDismissed, setRevealDismissed] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
+  const [showAtlasModal, setShowAtlasModal] = useState(false)
 
   useEffect(() => {
     if (gameStatus === 'playing') setRevealDismissed(false)
@@ -142,7 +144,11 @@ function App() {
             ?
           </button>
           <div className="streak-badge">🔥 {currentStreak}</div>
-          <div className="atlas-badge">🗺️ {collectedCountries.length}/195</div>
+          <div
+            className="atlas-badge"
+            onClick={() => setShowAtlasModal(true)}
+            style={{ cursor: 'pointer' }}
+          >🗺️ {collectedCountries.length}/195</div>
           {user ? (
             <button
               onClick={() => {
@@ -239,6 +245,13 @@ function App() {
           onClose={() => setShowAuthModal(false)}
           signInWithGoogle={signInWithGoogle}
           signInWithMagicLink={signInWithMagicLink}
+        />
+      )}
+      {showAtlasModal && (
+        <AtlasModal
+          collectedCountries={collectedCountries}
+          allCountries={countries}
+          onClose={() => setShowAtlasModal(false)}
         />
       )}
     </div>
