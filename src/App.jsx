@@ -144,7 +144,7 @@ function App() {
         allCountries={countries}
       />
 
-      <header id="globeiq-header">
+      <header id="globeiq-header" style={{ position: 'relative', overflow: 'visible' }}>
         <h1>🌍 GlobeIQ</h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <button
@@ -157,7 +157,7 @@ function App() {
           <div className="streak-badge">🔥 {currentStreak}</div>
           <div className="atlas-badge">🗺️ {collectedCountries.length}/195</div>
           {user ? (
-            <div ref={userMenuRef} style={{ position: 'relative' }}>
+            <div ref={userMenuRef}>
               <button
                 onClick={() => setShowUserMenu(v => !v)}
                 style={{
@@ -175,14 +175,14 @@ function App() {
               {showUserMenu && (
                 <div style={{
                   position: 'absolute',
-                  top: 'calc(100% + 6px)',
+                  top: '100%',
                   right: 0,
                   background: '#1a1a2e',
                   border: '1px solid #ffffff20',
                   borderRadius: 10,
                   padding: '8px 0',
                   minWidth: 200,
-                  zIndex: 500,
+                  zIndex: 9999,
                 }}>
                   <div style={{ padding: '8px 16px', fontSize: 12, color: '#666' }}>
                     Signed in as<br />
