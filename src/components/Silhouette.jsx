@@ -1,6 +1,6 @@
 import { feature } from 'topojson-client'
 import { geoNaturalEarth1, geoPath } from 'd3-geo'
-import worldData from 'world-atlas/countries-110m.json'
+import worldData from 'world-atlas/countries-50m.json'
 import { getContinentTheme } from '../utils/continentTheme'
 
 const countries = feature(worldData, worldData.objects.countries)
