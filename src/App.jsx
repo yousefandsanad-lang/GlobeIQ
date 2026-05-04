@@ -224,15 +224,18 @@ function App() {
         )}
 
         {(gameStatus === 'won' || gameStatus === 'lost') && revealDismissed && (
-          <button
-            type="button"
-            className="reveal-pill"
-            onClick={() => setRevealDismissed(false)}
-          >
-            {gameStatus === 'won'
-              ? '🎉 You got it! Tap to see result'
-              : 'See result →'}
-          </button>
+          <>
+            <button
+              type="button"
+              className="reveal-pill"
+              onClick={() => setRevealDismissed(false)}
+            >
+              {gameStatus === 'won'
+                ? '🎉 You got it! Tap to see result'
+                : 'See result →'}
+            </button>
+            <HintPanel guessCount={6} country={currentCountry} />
+          </>
         )}
 
       </main>
