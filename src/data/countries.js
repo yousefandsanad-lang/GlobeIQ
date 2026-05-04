@@ -1,7 +1,7 @@
 const countries = [
   // ── Easy ──────────────────────────────────────────────────────────────────
   {
-    id: "36",
+    id: "036",
     name: "Australia",
     continent: "Oceania",
     population: "26 million",
@@ -16,7 +16,7 @@ const countries = [
     continentColor: "#5B8CFF",
   },
   {
-    id: "76",
+    id: "076",
     name: "Brazil",
     continent: "South America",
     population: "215 million",
@@ -219,7 +219,7 @@ const countries = [
 
   // ── Medium ────────────────────────────────────────────────────────────────
   {
-    id: "32",
+    id: "032",
     name: "Argentina",
     continent: "South America",
     population: "46 million",
@@ -234,7 +234,7 @@ const countries = [
     continentColor: "#E85D4A",
   },
   {
-    id: "40",
+    id: "040",
     name: "Austria",
     continent: "Europe",
     population: "9 million",
@@ -249,7 +249,7 @@ const countries = [
     continentColor: "#4A90D9",
   },
   {
-    id: "56",
+    id: "056",
     name: "Belgium",
     continent: "Europe",
     population: "11.6 million",
@@ -689,7 +689,7 @@ const countries = [
 
   // ── Hard ──────────────────────────────────────────────────────────────────
   {
-    id: "4",
+    id: "004",
     name: "Afghanistan",
     continent: "Asia",
     population: "40 million",
@@ -704,7 +704,7 @@ const countries = [
     continentColor: "#2ECC8A",
   },
   {
-    id: "8",
+    id: "008",
     name: "Albania",
     continent: "Europe",
     population: "2.8 million",
@@ -719,7 +719,7 @@ const countries = [
     continentColor: "#4A90D9",
   },
   {
-    id: "12",
+    id: "012",
     name: "Algeria",
     continent: "Africa",
     population: "45 million",
@@ -734,7 +734,7 @@ const countries = [
     continentColor: "#E8A838",
   },
   {
-    id: "20",
+    id: "020",
     name: "Andorra",
     continent: "Europe",
     population: "80,000",
@@ -749,7 +749,7 @@ const countries = [
     continentColor: "#4A90D9",
   },
   {
-    id: "24",
+    id: "024",
     name: "Angola",
     continent: "Africa",
     population: "35 million",
@@ -764,7 +764,7 @@ const countries = [
     continentColor: "#E8A838",
   },
   {
-    id: "28",
+    id: "028",
     name: "Antigua and Barbuda",
     continent: "North America",
     population: "93,000",
@@ -779,7 +779,7 @@ const countries = [
     continentColor: "#E85D4A",
   },
   {
-    id: "51",
+    id: "051",
     name: "Armenia",
     continent: "Asia",
     population: "3 million",
@@ -794,7 +794,7 @@ const countries = [
     continentColor: "#2ECC8A",
   },
   {
-    id: "31",
+    id: "031",
     name: "Azerbaijan",
     continent: "Asia",
     population: "10 million",
@@ -809,7 +809,7 @@ const countries = [
     continentColor: "#2ECC8A",
   },
   {
-    id: "44",
+    id: "044",
     name: "Bahamas",
     continent: "North America",
     population: "400,000",
@@ -824,7 +824,7 @@ const countries = [
     continentColor: "#E85D4A",
   },
   {
-    id: "48",
+    id: "048",
     name: "Bahrain",
     continent: "Asia",
     population: "1.7 million",
@@ -839,7 +839,7 @@ const countries = [
     continentColor: "#2ECC8A",
   },
   {
-    id: "50",
+    id: "050",
     name: "Bangladesh",
     continent: "Asia",
     population: "170 million",
@@ -854,7 +854,7 @@ const countries = [
     continentColor: "#2ECC8A",
   },
   {
-    id: "52",
+    id: "052",
     name: "Barbados",
     continent: "North America",
     population: "280,000",
@@ -884,7 +884,7 @@ const countries = [
     continentColor: "#4A90D9",
   },
   {
-    id: "84",
+    id: "084",
     name: "Belize",
     continent: "North America",
     population: "410,000",
@@ -914,7 +914,7 @@ const countries = [
     continentColor: "#E8A838",
   },
   {
-    id: "64",
+    id: "064",
     name: "Bhutan",
     continent: "Asia",
     population: "780,000",
@@ -929,7 +929,7 @@ const countries = [
     continentColor: "#2ECC8A",
   },
   {
-    id: "68",
+    id: "068",
     name: "Bolivia",
     continent: "South America",
     population: "12 million",
@@ -944,7 +944,7 @@ const countries = [
     continentColor: "#E85D4A",
   },
   {
-    id: "70",
+    id: "070",
     name: "Bosnia and Herzegovina",
     aliases: ["Bosnia"],
     continent: "Europe",
@@ -960,7 +960,7 @@ const countries = [
     continentColor: "#4A90D9",
   },
   {
-    id: "72",
+    id: "072",
     name: "Botswana",
     continent: "Africa",
     population: "2.6 million",
@@ -975,7 +975,7 @@ const countries = [
     continentColor: "#E8A838",
   },
   {
-    id: "96",
+    id: "096",
     name: "Brunei",
     continent: "Asia",
     population: "450,000",
@@ -2548,7 +2548,7 @@ const countries = [
     continentColor: "#4A90D9",
   },
   {
-    id: "90",
+    id: "090",
     name: "Solomon Islands",
     continent: "Oceania",
     population: "720,000",

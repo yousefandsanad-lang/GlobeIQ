@@ -5,10 +5,15 @@ import { getContinentTheme } from '../utils/continentTheme'
 
 const countries = feature(worldData, worldData.objects.countries)
 
-export default function Silhouette({ continent, revealed, countryName, countryId }) {
+// Countries too small to appear in 110m topology — show flag instead
+const MICRO_COUNTRIES = new Set(['702', '336', '492', '674', '438', '020', '462', '470', '048', '442'])
+
+export default function Silhouette({ continent, revealed, countryName, countryId, flagEmoji }) {
   const theme = getContinentTheme(continent)
 
-  const countryFeature = countries.features.find(
+  const isMicro = MICRO_COUNTRIES.has(String(countryId))
+
+  const countryFeature = isMicro ? null : countries.features.find(
     f => String(f.id) === String(countryId)
   )
 
@@ -59,11 +64,9 @@ export default function Silhouette({ continent, revealed, countryName, countryId
             y="100"
             textAnchor="middle"
             dominantBaseline="central"
-            fill="white"
-            fontSize="64"
-            fontWeight="bold"
+            fontSize={isMicro ? "60" : "64"}
           >
-            ?
+            {isMicro ? (flagEmoji ?? '?') : '?'}
           </text>
         )}
       </svg>

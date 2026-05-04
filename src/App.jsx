@@ -163,6 +163,7 @@ function App() {
               revealed={false}
               countryName={currentCountry.name}
               countryId={currentCountry.id}
+              flagEmoji={currentCountry.flagEmoji}
             />
             <HintPanel guessCount={guessCount} country={currentCountry} />
             <GuessInput
