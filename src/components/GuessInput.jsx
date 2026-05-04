@@ -25,7 +25,6 @@ export default function GuessInput({ onGuess, disabled, countries, countryNames,
     : sortedCountries
 
   function isValidCountry(trimmed) {
-    console.log('countryNames length:', countryNames?.length)
     const q = trimmed.toLowerCase()
     return countryNames.some(name => name.toLowerCase() === q)
   }

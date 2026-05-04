@@ -50,7 +50,6 @@ export default function usePuzzleMode() {
   }
 
   function unlockBonus() {
-    console.log('Ad completed')
     const next = bonusPlaysToday + 1
     setBonusPlaysToday(next)
     persist(mode, next)

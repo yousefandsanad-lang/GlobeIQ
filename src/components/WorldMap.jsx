@@ -99,7 +99,6 @@ export default function WorldMap({ collectedCountries = [], currentCountryId, al
               style={isCollected ? { pointerEvents: 'auto', cursor: 'pointer' } : undefined}
               onMouseEnter={isCollected ? (e) => {
                 const name = nameById.get(idCoerced)
-                console.log('[WorldMap] hover:', name, idCoerced, 'allCountries length:', allCountries?.length, 'nameById size:', nameById.size)
                 if (name) setHoveredCountry({ name, x: e.clientX, y: e.clientY })
               } : undefined}
               onMouseMove={isCollected ? (e) => {

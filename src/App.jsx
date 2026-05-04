@@ -16,7 +16,6 @@ import { generateShareText } from './utils/shareCard'
 import countries from './data/countries'
 
 
-console.log('countries length:', countries.length)
 const countryNames = countries.map(c => c.name)
 countries.forEach(c => {
   if (c.aliases) countryNames.push(...c.aliases)
