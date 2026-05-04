@@ -5,15 +5,18 @@ export default function GuessInput({ onGuess, disabled, countries, countryNames,
   const [showDropdown, setShowDropdown] = useState(false)
   const [dropdownDirection, setDropdownDirection] = useState('down')
   const [userInteracted, setUserInteracted] = useState(false)
+  const [highlightedIndex, setHighlightedIndex] = useState(-1)
   const [error, setError] = useState('')
   const [shaking, setShaking] = useState(false)
   const errorTimerRef = useRef(null)
   const containerRef = useRef(null)
   const inputRef = useRef(null)
+  const itemRefs = useRef([])
 
   useEffect(() => {
     setUserInteracted(false)
     setShowDropdown(false)
+    setHighlightedIndex(-1)
   }, [puzzleKey])
 
   useEffect(() => {
@@ -24,6 +27,13 @@ export default function GuessInput({ onGuess, disabled, countries, countryNames,
   }, [puzzleKey])
 
   useEffect(() => () => clearTimeout(errorTimerRef.current), [])
+
+  // Scroll highlighted item into view
+  useEffect(() => {
+    if (highlightedIndex >= 0 && itemRefs.current[highlightedIndex]) {
+      itemRefs.current[highlightedIndex].scrollIntoView({ block: 'nearest' })
+    }
+  }, [highlightedIndex])
 
   const sortedCountries = useMemo(
     () => [...countries].sort((a, b) => a.name.localeCompare(b.name)),
@@ -60,9 +70,9 @@ export default function GuessInput({ onGuess, disabled, countries, countryNames,
     return previousGuesses.some(g => g.toLowerCase() === q)
   }
 
-  function submit() {
+  function submit(nameOverride) {
     if (disabled) return
-    const trimmed = value.trim()
+    const trimmed = (nameOverride ?? value).trim()
     if (!trimmed) {
       showError('⚠️ Please type a country name first')
       return
@@ -82,24 +92,69 @@ export default function GuessInput({ onGuess, disabled, countries, countryNames,
     }
     setValue('')
     setShowDropdown(false)
+    setHighlightedIndex(-1)
     setError('')
     setShaking(false)
   }
 
   function handleKeyDown(e) {
     setUserInteracted(true)
-    if (e.key === 'Enter') submit()
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      if (!showDropdown) setShowDropdown(true)
+      setHighlightedIndex(prev =>
+        prev < filteredCountries.length - 1 ? prev + 1 : 0
+      )
+      return
+    }
+
+    if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      setHighlightedIndex(prev =>
+        prev > 0 ? prev - 1 : filteredCountries.length - 1
+      )
+      return
+    }
+
+    if (e.key === 'Escape') {
+      setShowDropdown(false)
+      setHighlightedIndex(-1)
+      return
+    }
+
+    if (e.key === 'Enter') {
+      if (highlightedIndex >= 0 && filteredCountries[highlightedIndex]) {
+        const name = filteredCountries[highlightedIndex].name
+        setValue(name)
+        setShowDropdown(false)
+        setHighlightedIndex(-1)
+        submit(name)
+      } else {
+        submit()
+      }
+    }
   }
 
   function handleChange(e) {
     setUserInteracted(true)
     setValue(e.target.value)
+    setHighlightedIndex(-1)
     setShowDropdown(true)
   }
 
   function handleSelect(name) {
     setValue(name)
     setShowDropdown(false)
+    setHighlightedIndex(-1)
+  }
+
+  function computeDirection() {
+    if (!containerRef.current) return
+    const rect = containerRef.current.getBoundingClientRect()
+    const spaceBelow = window.innerHeight - rect.bottom
+    const spaceAbove = rect.top
+    setDropdownDirection(spaceBelow < 300 && spaceAbove > spaceBelow ? 'up' : 'down')
   }
 
   const guessesLeft = Math.max(0, 7 - previousGuesses.length)
@@ -118,27 +173,9 @@ export default function GuessInput({ onGuess, disabled, countries, countryNames,
         value={value}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
-        onClick={() => {
-          setUserInteracted(true)
-          if (containerRef.current) {
-            const rect = containerRef.current.getBoundingClientRect()
-            const spaceBelow = window.innerHeight - rect.bottom
-            const spaceAbove = rect.top
-            setDropdownDirection(spaceBelow < 300 && spaceAbove > spaceBelow ? 'up' : 'down')
-          }
-          setShowDropdown(true)
-        }}
-        onFocus={() => {
-          if (!userInteracted) return
-          if (containerRef.current) {
-            const rect = containerRef.current.getBoundingClientRect()
-            const spaceBelow = window.innerHeight - rect.bottom
-            const spaceAbove = rect.top
-            setDropdownDirection(spaceBelow < 300 && spaceAbove > spaceBelow ? 'up' : 'down')
-          }
-          setShowDropdown(true)
-        }}
-        onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
+        onClick={() => { setUserInteracted(true); computeDirection(); setShowDropdown(true) }}
+        onFocus={() => { if (!userInteracted) return; computeDirection(); setShowDropdown(true) }}
+        onBlur={() => setTimeout(() => { setShowDropdown(false); setHighlightedIndex(-1) }, 150)}
         placeholder="Type a country name..."
         disabled={disabled}
         style={{
@@ -149,13 +186,7 @@ export default function GuessInput({ onGuess, disabled, countries, countryNames,
       />
 
       {error && (
-        <div
-          style={{
-            color: '#E74C3C',
-            fontSize: 12,
-            marginTop: 6,
-          }}
-        >
+        <div style={{ color: '#E74C3C', fontSize: 12, marginTop: 6 }}>
           {error}
         </div>
       )}
@@ -181,9 +212,10 @@ export default function GuessInput({ onGuess, disabled, countries, countryNames,
             listStyle: 'none',
           }}
         >
-          {filteredCountries.map(c => (
+          {filteredCountries.map((c, idx) => (
             <li
               key={c.id}
+              ref={el => (itemRefs.current[idx] = el)}
               onMouseDown={() => handleSelect(c.name)}
               style={{
                 padding: '12px 16px',
@@ -191,10 +223,10 @@ export default function GuessInput({ onGuess, disabled, countries, countryNames,
                 cursor: 'pointer',
                 borderBottom: '1px solid rgba(255,255,255,0.06)',
                 color: 'white',
-                background: 'transparent',
+                background: idx === highlightedIndex ? '#ffffff20' : 'transparent',
               }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
-              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+              onMouseEnter={e => (e.currentTarget.style.background = idx === highlightedIndex ? '#ffffff20' : 'rgba(255,255,255,0.08)')}
+              onMouseLeave={e => (e.currentTarget.style.background = idx === highlightedIndex ? '#ffffff20' : 'transparent')}
             >
               <span>{c.name}</span>
             </li>
@@ -203,7 +235,7 @@ export default function GuessInput({ onGuess, disabled, countries, countryNames,
       )}
 
       <button
-        onClick={submit}
+        onClick={() => submit()}
         disabled={disabled || !value.trim()}
       >
         Guess
