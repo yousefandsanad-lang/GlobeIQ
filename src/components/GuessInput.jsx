@@ -140,8 +140,10 @@ export default function GuessInput({ onGuess, disabled, countries, countryNames,
             bottom: dropdownDirection === 'up' ? '100%' : 'auto',
             left: 0,
             width: '100%',
-            background: '#1a1a2e',
-            border: '1px solid #ffffff20',
+            background: 'rgba(10, 14, 26, 0.85)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            border: '1px solid rgba(255,255,255,0.15)',
             borderRadius: dropdownDirection === 'up' ? '12px 12px 0 0' : '0 0 12px 12px',
             maxHeight: 250,
             overflowY: 'auto',
@@ -159,10 +161,11 @@ export default function GuessInput({ onGuess, disabled, countries, countryNames,
                 padding: '12px 16px',
                 fontSize: 15,
                 cursor: 'pointer',
-                borderBottom: '1px solid #ffffff08',
+                borderBottom: '1px solid rgba(255,255,255,0.06)',
                 color: 'white',
+                background: 'transparent',
               }}
-              onMouseEnter={e => (e.currentTarget.style.background = '#ffffff12')}
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
               onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
             >
               <span>{c.name}</span>
