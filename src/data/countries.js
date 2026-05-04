@@ -1349,7 +1349,7 @@ const countries = [
     difficulty: "medium",
     climate: "Baltic coast & forests · Cool maritime",
     borders: 2,
-    knownFor: "Famous for Tallinn's medieval old town, e-Estonia digital governance and Skype's birthplace",
+    knownFor: "Famous for a medieval walled capital, the world's most advanced digital government, and being the birthplace of Skype",
     funFact: "Citizens manage nearly all affairs digitally — voting, taxes, documents, business registration — all online in minutes — a digital-first nation that birthed Skype.",
     personalityTags: ["💻 Digital Republic", "🏰 Medieval Tallinn"],
     continentColor: "#4A90D9",
