@@ -94,6 +94,7 @@ function App() {
         <WorldMap
           collectedCountries={collectedCountries}
           currentCountryId={currentCountry?.id}
+          allCountries={countries}
         />
         Loading…
       </div>

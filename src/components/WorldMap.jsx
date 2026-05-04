@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { feature } from 'topojson-client'
 import { geoNaturalEarth1, geoPath } from 'd3-geo'
 import worldData from 'world-atlas/countries-50m.json'
@@ -22,9 +23,11 @@ function extractId(f) {
   return null
 }
 
-export default function WorldMap({ collectedCountries = [], currentCountryId }) {
+export default function WorldMap({ collectedCountries = [], currentCountryId, allCountries = [] }) {
   const collectedSet = new Set(collectedCountries.map(String))
   const currentIdStr = currentCountryId != null ? String(currentCountryId) : null
+  const nameById = new Map(allCountries.map(c => [String(c.id), c.name]))
+  const [hoveredCountry, setHoveredCountry] = useState(null)
 
   return (
     <div
@@ -85,6 +88,15 @@ export default function WorldMap({ collectedCountries = [], currentCountryId }) 
               fill={fill}
               stroke={stroke}
               strokeWidth={strokeWidth}
+              style={isCollected ? { pointerEvents: 'auto', cursor: 'default' } : undefined}
+              onMouseEnter={isCollected ? (e) => {
+                const name = nameById.get(idCoerced)
+                if (name) setHoveredCountry({ name, x: e.clientX, y: e.clientY })
+              } : undefined}
+              onMouseMove={isCollected ? (e) => {
+                setHoveredCountry(prev => prev ? { ...prev, x: e.clientX, y: e.clientY } : null)
+              } : undefined}
+              onMouseLeave={isCollected ? () => setHoveredCountry(null) : undefined}
             />
           )
         })}
@@ -99,6 +111,28 @@ export default function WorldMap({ collectedCountries = [], currentCountryId }) 
           pointerEvents: 'none',
         }}
       />
+
+      {hoveredCountry && (
+        <div
+          style={{
+            position: 'fixed',
+            left: hoveredCountry.x + 12,
+            top: hoveredCountry.y - 28,
+            background: '#000000CC',
+            color: '#fff',
+            fontSize: 12,
+            fontWeight: 600,
+            padding: '4px 10px',
+            borderRadius: 20,
+            border: '1px solid #ffffff30',
+            pointerEvents: 'none',
+            zIndex: 999,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {hoveredCountry.name}
+        </div>
+      )}
     </div>
   )
 }
