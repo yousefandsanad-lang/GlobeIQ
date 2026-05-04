@@ -46,8 +46,25 @@ function AlreadyPlayedToday({ country }) {
       <div style={{ color: '#fff', fontWeight: 700, fontSize: 18, marginBottom: 6 }}>
         You already have {country.name}!
       </div>
-      <div style={{ color: '#888', fontSize: 13, marginBottom: 24 }}>
+      <div style={{ color: '#888', fontSize: 13, marginBottom: 16 }}>
         You collected this country in your atlas.
+      </div>
+      <div style={{
+        background: '#ffffff08',
+        border: '1px solid #ffffff12',
+        borderRadius: 12,
+        padding: '12px 16px',
+        marginBottom: 24,
+        maxWidth: 320,
+        margin: '0 auto 24px',
+        textAlign: 'left',
+      }}>
+        <div style={{ color: '#888', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>
+          Did you know?
+        </div>
+        <div style={{ color: '#ccc', fontSize: 13, lineHeight: 1.5 }}>
+          {country.funFact}
+        </div>
       </div>
       <div style={{ color: '#888', fontSize: 12, marginBottom: 6 }}>Next puzzle in</div>
       <div style={{
