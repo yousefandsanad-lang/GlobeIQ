@@ -5,11 +5,8 @@ import worldData from 'world-atlas/countries-50m.json'
 import countries from '../data/countries'
 import { getContinentTheme } from '../utils/continentTheme'
 
-const WIDTH = 1000
-const HEIGHT = 500
-
 const featureCollection = feature(worldData, worldData.objects.countries)
-const projection = geoNaturalEarth1().fitSize([WIDTH, HEIGHT], featureCollection)
+const projection = geoNaturalEarth1().scale(153).translate([500, 250])
 const pathGen = geoPath(projection)
 
 const gameById = new Map()
@@ -49,10 +46,15 @@ export default function WorldMap({ collectedCountries = [], currentCountryId, al
       }}
     >
       <svg
-        viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
+        viewBox="0 0 1000 500"
         preserveAspectRatio="xMidYMid slice"
-        width="100%"
-        height="100%"
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+        }}
         style={{ pointerEvents: 'none' }}
       >
         {featureCollection.features.map((f, idx) => {
