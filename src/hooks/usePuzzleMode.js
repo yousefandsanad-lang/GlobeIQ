@@ -50,9 +50,11 @@ export default function usePuzzleMode() {
   }
 
   function unlockBonus() {
+    if (!proUser && bonusPlaysToday >= FREE_BONUS_LIMIT) return false
     const next = bonusPlaysToday + 1
     setBonusPlaysToday(next)
     persist(mode, next)
+    return true
   }
 
   function switchMode(newMode) {

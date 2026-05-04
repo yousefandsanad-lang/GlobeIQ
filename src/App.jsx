@@ -13,6 +13,7 @@ import WorldMap from './components/WorldMap'
 import HowToPlay from './components/HowToPlay'
 import AuthModal from './components/AuthModal'
 import AtlasModal from './components/AtlasModal'
+import AdGate from './components/AdGate'
 import { generateShareText } from './utils/shareCard'
 import { playCorrect, playWrong, playReveal, playStreak } from './utils/sound'
 import countries from './data/countries'
@@ -101,6 +102,11 @@ function App() {
   const { collectedCountries, addToAtlas } = useAtlas(user)
 
   const [devOffset, setDevOffset] = useState(0)
+  const [bonusKey, setBonusKey] = useState(null)
+  const [bonusCount, setBonusCount] = useState(0)
+  const [showAdGate, setShowAdGate] = useState(false)
+
+  const gameKey = bonusKey || (isDevMode ? devDateKey(devOffset) : null)
 
   const {
     currentCountry,
@@ -109,9 +115,9 @@ function App() {
     gameStatus,
     makeGuess,
     resetGame,
-  } = useGameLogic(collectedCountries, isDevMode ? devDateKey(devOffset) : null)
+  } = useGameLogic(collectedCountries, gameKey)
   const { currentStreak, bestStreak, recordWin, recordLoss } = useStreak(user)
-  const { switchMode } = usePuzzleMode()
+  const { switchMode, bonusPlaysToday, proUser, canPlayBonus, unlockBonus, FREE_BONUS_LIMIT } = usePuzzleMode()
 
   const [revealDismissed, setRevealDismissed] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
@@ -168,6 +174,20 @@ function App() {
     }
     prevGuessCountRef.current = guessCount
   }, [guessCount, gameStatus])
+
+  function handleUnlockBonus() {
+    unlockBonus()
+    setBonusKey(devDateKey(365 + bonusCount * 37))
+    setBonusCount(c => c + 1)
+    setRevealDismissed(false)
+    setShowAdGate(false)
+  }
+
+  function handleProBonus() {
+    setBonusKey(devDateKey(365 + bonusCount * 37))
+    setBonusCount(c => c + 1)
+    setRevealDismissed(false)
+  }
 
   function handleShare() {
     if (!currentCountry) return
@@ -334,6 +354,47 @@ function App() {
           </>
         )}
 
+        {(gameStatus === 'won' || gameStatus === 'lost') && (
+          <div style={{ textAlign: 'center', padding: '16px 0 8px' }}>
+            {proUser ? (
+              <button
+                onClick={handleProBonus}
+                style={{
+                  background: '#4A90D9', color: '#fff', border: 'none',
+                  borderRadius: 12, padding: '12px 28px', fontWeight: 700,
+                  fontSize: 15, cursor: 'pointer',
+                }}
+              >
+                Play another →
+              </button>
+            ) : canPlayBonus() ? (
+              <>
+                <div style={{ color: '#888', fontSize: 13, marginBottom: 10 }}>
+                  Play another?&nbsp;
+                  <span style={{ color: '#fff', fontWeight: 600 }}>
+                    {FREE_BONUS_LIMIT - bonusPlaysToday} bonus puzzle{FREE_BONUS_LIMIT - bonusPlaysToday !== 1 ? 's' : ''} remaining
+                  </span>
+                </div>
+                <button
+                  onClick={() => setShowAdGate(true)}
+                  style={{
+                    background: '#1a2540', color: '#fff', border: '1px solid #4A90D940',
+                    borderRadius: 12, padding: '12px 24px', fontWeight: 700,
+                    fontSize: 15, cursor: 'pointer',
+                  }}
+                >
+                  🎬 Watch Ad for Bonus Puzzle
+                </button>
+              </>
+            ) : (
+              <div style={{ color: '#666', fontSize: 13, lineHeight: 1.6 }}>
+                No bonus puzzles left today.<br />
+                <span style={{ color: '#aaa' }}>Come back tomorrow or go Pro for unlimited!</span>
+              </div>
+            )}
+          </div>
+        )}
+
       </main>
 
       {showHowToPlay && (
@@ -351,6 +412,14 @@ function App() {
           collectedCountries={collectedCountries}
           allCountries={countries}
           onClose={() => setShowAtlasModal(false)}
+        />
+      )}
+      {showAdGate && (
+        <AdGate
+          onUnlock={handleUnlockBonus}
+          onClose={() => setShowAdGate(false)}
+          bonusPlaysToday={bonusPlaysToday}
+          FREE_BONUS_LIMIT={FREE_BONUS_LIMIT}
         />
       )}
     </div>
