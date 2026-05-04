@@ -106,11 +106,6 @@ function App() {
     })
   }
 
-  function handleNext() {
-    resetGame()
-    switchMode('daily')
-  }
-
   if (!currentCountry) {
     return (
       <div id="globeiq-app">
@@ -213,7 +208,6 @@ function App() {
             <RevealCard
               country={currentCountry}
               won={gameStatus === 'won'}
-              onNext={handleNext}
               onDismiss={() => setRevealDismissed(true)}
             />
             <button className="share-button" onClick={handleShare}>

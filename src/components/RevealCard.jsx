@@ -1,7 +1,27 @@
 import { useEffect, useRef, useState } from 'react'
 import { getContinentTheme } from '../utils/continentTheme'
 
-export default function RevealCard({ country, won, onNext, onDismiss }) {
+function useCountdown() {
+  const [time, setTime] = useState('')
+  useEffect(() => {
+    function tick() {
+      const now = new Date()
+      const midnight = new Date(now)
+      midnight.setHours(24, 0, 0, 0)
+      const diff = midnight - now
+      const h = Math.floor(diff / 3600000)
+      const m = Math.floor((diff % 3600000) / 60000)
+      const s = Math.floor((diff % 60000) / 1000)
+      setTime(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`)
+    }
+    tick()
+    const id = setInterval(tick, 1000)
+    return () => clearInterval(id)
+  }, [])
+  return time
+}
+
+export default function RevealCard({ country, won, onDismiss }) {
   const theme = getContinentTheme(country.continent)
   const cardRef = useRef(null)
   const [showScrollHint, setShowScrollHint] = useState(false)
@@ -15,6 +35,8 @@ export default function RevealCard({ country, won, onNext, onDismiss }) {
       return () => clearTimeout(t)
     }
   }, [country.id])
+
+  const countdown = useCountdown()
 
   return (
     <div className="reveal-card" ref={cardRef}>
@@ -68,13 +90,26 @@ export default function RevealCard({ country, won, onNext, onDismiss }) {
         {country.funFact}
       </div>
 
-      <button
-        className="next-button"
-        onClick={onNext}
-        style={{ background: theme.primary }}
-      >
-        Next Puzzle →
-      </button>
+      <div style={{
+        textAlign: 'center',
+        padding: '16px 0 4px',
+      }}>
+        <div style={{ color: '#888', fontSize: 12, marginBottom: 6 }}>
+          Next puzzle in
+        </div>
+        <div style={{
+          fontVariantNumeric: 'tabular-nums',
+          fontSize: 28,
+          fontWeight: 800,
+          color: theme.primary,
+          letterSpacing: 2,
+        }}>
+          {countdown}
+        </div>
+        <div style={{ color: '#555', fontSize: 11, marginTop: 6 }}>
+          Come back tomorrow for a new country 🌍
+        </div>
+      </div>
 
       {showScrollHint && (
         <div className="scroll-hint">scroll for more ↓</div>
