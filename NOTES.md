@@ -6,23 +6,43 @@ Daily country-guessing game. React + Vite. Player has 7 guesses; each wrong gues
 
 - React 19 + Vite 6
 - `world-atlas` + `topojson-client` + `d3-geo` for SVG maps (background WorldMap + Silhouette)
-- `@supabase/supabase-js` installed but **not yet wired up** (env vars in `.env` are empty)
-- Persistence: pure `localStorage`, no backend yet
+- `@supabase/supabase-js` — wired up; auth + data sync working
+- Persistence: `localStorage` (primary) + Supabase (cloud sync for logged-in users)
 - Styling: hand-rolled CSS in `src/styles/main.css` + minimal reset in `src/index.css`
 
 Run with `npm run dev` → http://localhost:5173
+
+Live at: https://globe-iq-one.vercel.app
 
 ---
 
 ## Current status (as of 2026-05-03)
 
-- **195 countries** complete in `src/data/countries.js`
-- **Header**: 🌍 GlobeIQ logo on left; right side has `?` help button + 🔥 streak badge + 🗺️ X/195 atlas badge
-- **StreakMap card removed** — streak + atlas progress now lives entirely in the header badges
-- **Browse dropdown** opens on input focus in `GuessInput.jsx`
-- **Compact RevealCard** with dismiss button (`onDismiss` → `revealDismissed` state in `App.jsx`)
-- **Real country silhouettes** rendering via `Silhouette.jsx` + `geoNaturalEarth1`
-- **World map background** (`WorldMap.jsx`) with collected countries glowing in continent colors
+### Completed this session
+- **Difficulty rebalanced**: 31 easy / 80 medium / 84 hard (was 14/31/150)
+- **HowToPlay modal**: compact layout, correct hint order, no scroll needed
+- **Supabase auth**: Sign In button in header, Google OAuth + magic link, `AuthModal` via React Portal
+- **User menu**: native `confirm()` dialog showing "Signed in as [email]" — no dropdown, no z-index issues
+- **Data sync**: atlas + streak sync to Supabase for logged-in users (`syncService.js`)
+- **ISO IDs zero-padded**: all 195 country IDs are 3-digit strings (e.g. `"036"`)
+- **50m topology**: switched from 110m → 50m world-atlas for higher resolution silhouettes
+- **Micro Nation mystery card**: spinning 🌍 globe + hint text + badge for countries with no topology path
+- **Silhouette centering**: two-step bounds-centroid approach centers every country mathematically
+- **Hover tooltips**: collected countries on WorldMap show name tooltip on hover
+- **Sound effects**: Web Audio API — correct, wrong, reveal, streak fanfare (`src/utils/sound.js`)
+- **Frosted glass dropdown**: GuessInput autocomplete is semi-transparent with `backdrop-filter: blur(8px)`
+- **Dropdown direction**: flips above input when near bottom of screen
+- **Flag hidden in dropdown**: no flag emoji in autocomplete (flag is hint 6)
+- **Auto-focus input**: 500ms delayed focus on new puzzle, suppressed on programmatic focus
+- **WorldMap stacking context fix**: removed `willChange`/`WebkitTransform` from wrapper div
+- **AuthModal portal**: renders via `createPortal` to `document.body`, z-index 99999/100000
+- **Mobile Safari SVG fix**: explicit `xmlns`, `width`/`height` attrs, try/catch on projection
+
+### Header
+- 🌍 GlobeIQ logo left
+- Right: `?` help · 🔥 streak · 🗺️ X/195 · Sign In (or email button)
+
+### 195 countries complete in `src/data/countries.js`
 
 ---
 
@@ -30,52 +50,52 @@ Run with `npm run dev` → http://localhost:5173
 
 ### Entry / root
 
-- **`src/main.jsx`** — Vite entry. Mounts `<App />` in `#root`. Imports `index.css` and `styles/main.css`.
-- **`src/App.jsx`** — Root component. Calls hooks in order: `useAtlas` first (needed by `useGameLogic`), then `useGameLogic(collectedCountries)`, `useStreak`, `usePuzzleMode`. Renders `WorldMap` background, header (logo + `?` help button + 🔥 streak badge + 🗺️ atlas badge), main game area, `HowToPlay` modal on first visit. `useEffect` calls `addToAtlas` + `recordWin` on win, `recordLoss` on loss. Passes full `countries` array to `GuessInput` and `currentCountry.id` to `Silhouette`.
-- **`src/index.css`** — minimal CSS reset (box-sizing, margin/padding zeroing, body line-height).
-- **`src/styles/main.css`** — all GlobeIQ component styling. Defines `pulse`, `fadeIn`, `shake` keyframes. Sets `position: relative; z-index: 1` on `#globeiq-header` and `.game-area`. `.streak-badge` and `.atlas-badge` share base badge styles with individual glow box-shadows (🔥 `#E85D4A40`, 🗺️ `#4A90D940`).
+- **`src/main.jsx`** — Vite entry. Mounts `<App />` in `#root`.
+- **`src/App.jsx`** — Root component. Hook order: `useAuth` first, then `useAtlas(user)`, `useGameLogic`, `useStreak(user)`, `usePuzzleMode`. Sound effects via two `useEffect`s (win/loss + wrong guess). Renders `WorldMap`, header, game area, `HowToPlay` modal, `AuthModal`.
+- **`src/index.css`** — minimal CSS reset.
+- **`src/styles/main.css`** — all GlobeIQ component styling.
 
 ### Data + utils
 
-- **`src/data/countries.js`** — default-exports array of **195 country objects**. Each has: `id` (ISO 3166-1 numeric string), `name`, `continent`, `population`, `capital`, `flagEmoji`, `difficulty` (easy/medium/hard), `climate` (1–2 sentence description), `borders` (1 sentence), `knownFor` (full readable sentence), `funFact`, `personalityTags` (array of 2 strings), `continentColor` (hex). Some countries have an optional `aliases` array.
-- **`src/utils/continentTheme.js`** — exports `getContinentTheme(continent)` → `{ primary, background, glow }`. Hardcoded map for 7 continents + white fallback.
-- **`src/utils/shareCard.js`** — exports `generateShareText(country, guesses, won, puzzleNumber)`. Builds 7-square emoji row (🟢/🔴/⬜), truncates funFact to 8 words.
+- **`src/data/countries.js`** — 195 country objects. Each has: `id` (3-digit ISO numeric string), `name`, `continent`, `population`, `capital`, `flagEmoji`, `difficulty` (easy/medium/hard), `climate`, `borders`, `knownFor`, `funFact`, `personalityTags`, `continentColor`. Optional: `aliases`.
+- **`src/data/schema.sql`** — Supabase table definitions: `players`, `atlas`, `streaks`. Run in Supabase SQL editor to create tables.
+- **`src/utils/continentTheme.js`** — `getContinentTheme(continent)` → `{ primary, background, glow }`.
+- **`src/utils/shareCard.js`** — `generateShareText(country, guesses, won, puzzleNumber)`.
+- **`src/utils/supabase.js`** — Supabase client singleton from `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY`.
+- **`src/utils/syncService.js`** — `createPlayerIfNotExists`, `syncAtlasToCloud`, `loadAtlasFromCloud`, `syncStreakToCloud`, `loadStreakFromCloud`. All try/catch, fail silently.
+- **`src/utils/sound.js`** — Web Audio API sound effects: `playCorrect`, `playWrong`, `playReveal`, `playStreak`. No external libs.
 
 ### Hooks (`src/hooks/`)
 
-- **`useGameLogic(collectedCountries)`** — main game state. `MAX_GUESSES = 7`. Accepts `collectedCountries` array from `useAtlas`. On mount: restores today's saved game from localStorage or picks a new country via `pickFromAvailable()`. Persists state on every change. `makeGuess(name)` matches case-insensitively against `country.name` AND `country.aliases`. `resetGame()` picks next available country. Country selection logic: filter out collected → filter out recent (last 5, stored in `globeiq_recent`) → if remaining pool < 3, ignore recency filter → pick random.
-- **`useAtlas()`** — tracks collected country IDs. State: `collectedCountries: string[]`. Loads from localStorage on mount. Returns `{ collectedCountries, addToAtlas(id), hasCountry(id), getAtlasCount() }`. `addToAtlas` is idempotent.
-- **`useStreak()`** — daily streak tracking. State: `currentStreak`, `bestStreak`, `lastPlayedDate`. `recordWin()` / `recordLoss()` are no-ops if `lastPlayedDate === today`. Both use yesterday-comparison for streak continuity.
-- **`usePuzzleMode()`** — daily vs bonus mode + bonus play limit. `proUser = false`, `FREE_BONUS_LIMIT = 3`. Resets `bonusPlaysToday` on new day. `unlockBonus()` is a stub (`console.log("Ad completed")`).
+- **`useGameLogic(collectedCountries)`** — main game state. `MAX_GUESSES = 7`. Picks country, manages guesses, persists to localStorage.
+- **`useAtlas(user)`** — collected country IDs. On mount: merges localStorage + cloud if logged in. `addToAtlas` syncs to cloud.
+- **`useStreak(user)`** — streak tracking. On mount: takes max of local + cloud values. `recordWin`/`recordLoss` sync to cloud.
+- **`useAuth()`** — `user`, `loading`, `signInWithGoogle`, `signInWithMagicLink`, `signOut`, `onAuthStateChange` listener.
+- **`usePuzzleMode()`** — daily vs bonus mode + bonus play limit stub.
 
 ### Components (`src/components/`)
 
-- **`WorldMap.jsx`** — full-viewport fixed background SVG. Projection: `geoNaturalEarth1().fitSize([1000, 500], featureCollection)`. Three country states: default (`#ffffff06`), current puzzle (`#ffffff03`), collected (continent-color at 40%/stroke 80%). Wrapped in radial-gradient vignette.
-- **`Silhouette.jsx`** — 220×220 box showing the actual SVG silhouette of the current country. Uses `geoNaturalEarth1().fitExtent([[30, 30], [170, 170]], countryFeature)` so the shape fits with 30px padding on all sides. Both the outer div and the `<svg>` element have `overflow: hidden` to clip shapes that extend beyond the viewBox. Fill: white (playing) or continent primary color (revealed). Falls back to "?" text if `countryId` not found in topology. `revealed` overlay shows country name.
-- **`DifficultyAura.jsx`** — small pill badge: green easy / amber medium / red hard.
-- **`HintPanel.jsx`** — renders one row per `guessCount`. **6 hints** in order:
-  1. 🌍 Continent
-  2. 🌤️ Climate & Terrain — value pulled from `country.climate`
-  3. 🗺️ Borders — value pulled from `country.borders`
-  4. 🏆 Known For — 13px bold white, value from `country.knownFor`
-  5. 🏙️ Capital — value from `country.capital`
-  6. 🚩 Flag — 32px emoji, value from `country.flagEmoji`
-- **`GuessInput.jsx`** — text input with alias-aware autocomplete (max 5 suggestions matching on name OR aliases). Dropdown opens on input focus. Strict validation: must match a canonical name or alias before `onGuess()` is called. Invalid/empty/duplicate guesses show error message (red, 12px) and trigger CSS shake animation. Dropdown stays open on invalid submit. Receives full `countries` array (not just names). Wrong-guess chips deduplicated on render via `[...new Set(previousGuesses)]`. Shows guesses remaining counter (`Math.max(0, 7 - previousGuesses.length)`).
-- **`RevealCard.jsx`** — end-of-game card: continent-color header on win / dark on loss, facts grid (Capital / Population / Known For / Continent), personality tags, fun-fact, "Next Puzzle →" button, dismiss button (`onDismiss`). Compact layout.
-- **`HowToPlay.jsx`** — full-screen modal. Click outside to close. Hint list matches current 6-hint system. Auto-shown on first visit (`globeiq_visited` key). Reopen via `?` header button.
-- **`StreakMap.jsx`** — still exists in `src/components/` but is **no longer rendered**. Can be deleted or repurposed later.
+- **`WorldMap.jsx`** — fixed background SVG, 50m resolution. Hover tooltip on collected countries. No `willChange`/`transform` (avoids stacking context).
+- **`Silhouette.jsx`** — 220×220 country shape. Two-step centering (fitExtent + bounds centroid). Falls back to animated "Micro Nation" mystery card for missing topology. Imports `gameCountries` internally for hint text.
+- **`DifficultyAura.jsx`** — pill badge: green/amber/red.
+- **`HintPanel.jsx`** — 6 hints revealed one per wrong guess: Continent → Climate → Borders → Known For → Capital → Flag.
+- **`GuessInput.jsx`** — autocomplete with frosted glass dropdown. Flips above input near screen bottom. Auto-focuses on `puzzleKey` change. Dropdown suppressed on programmatic focus (`userInteracted` state).
+- **`RevealCard.jsx`** — end-of-game card with facts, share button, dismiss.
+- **`HowToPlay.jsx`** — compact modal, fits without scrolling, correct hint order.
+- **`AuthModal.jsx`** — Google + magic link auth. React Portal to `document.body`. z-index 99999.
+- **`StreakMap.jsx`** — exists but not rendered. Can be deleted.
 
 ---
 
-## Hint order (current — 7 guesses, 6 hints)
+## Hint order (7 guesses, 6 hints)
 
 | Guess | Hint revealed |
 |---|---|
 | 1 | 🌍 Continent |
-| 2 | 🌤️ Climate & Terrain |
+| 2 | 🌡️ Climate & Terrain |
 | 3 | 🗺️ Borders |
 | 4 | 🏆 Known For |
-| 5 | 🏙️ Capital |
+| 5 | 🏙️ Capital City |
 | 6 | 🚩 Flag |
 | 7 | (no new hint — last chance) |
 
@@ -83,16 +103,16 @@ Run with `npm run dev` → http://localhost:5173
 
 ## localStorage keys
 
-| Key | Owner | Shape | Notes |
-|---|---|---|---|
-| `globeiq_daily_country` | `useGameLogic` | `{ date, countryId, guesses, guessCount, gameStatus }` | Today's puzzle + progress. Rolls to new puzzle when date changes. |
-| `globeiq_recent` | `useGameLogic` | `string[]` (max 5 IDs) | Last 5 country IDs seen. Avoids immediate repeats. Ignored if available pool drops below 3. |
-| `globeiq_atlas` | `useAtlas` | `string[]` | ISO 3166-1 numeric IDs of every country the user has won. Drives WorldMap highlighting and country selection filtering. |
-| `globeiq_streak` | `useStreak` | `{ currentStreak, bestStreak, lastPlayedDate }` | Streak counter + last play date. |
-| `globeiq_mode` | `usePuzzleMode` | `{ mode, bonusPlaysToday, date }` | Daily/bonus mode + per-day bonus play counter. |
-| `globeiq_visited` | `App.jsx` | `"true"` (string) | Set when HowToPlay modal is closed. Suppresses auto-open on subsequent visits. |
+| Key | Owner | Shape |
+|---|---|---|
+| `globeiq_daily_country` | `useGameLogic` | `{ date, countryId, guesses, guessCount, gameStatus }` |
+| `globeiq_recent` | `useGameLogic` | `string[]` (max 5 IDs) |
+| `globeiq_atlas` | `useAtlas` | `string[]` ISO IDs |
+| `globeiq_streak` | `useStreak` | `{ currentStreak, bestStreak, lastPlayedDate }` |
+| `globeiq_mode` | `usePuzzleMode` | `{ mode, bonusPlaysToday, date }` |
+| `globeiq_visited` | `App.jsx` | `"true"` |
 
-**Reset everything for testing:**
+**Reset everything:**
 ```js
 ;['globeiq_daily_country','globeiq_atlas','globeiq_streak','globeiq_mode','globeiq_visited','globeiq_recent']
   .forEach(k => localStorage.removeItem(k))
@@ -100,30 +120,42 @@ Run with `npm run dev` → http://localhost:5173
 
 ---
 
-## Known issues
+## Supabase setup
 
-1. **Floating silhouette near input** — country silhouette can visually overlap or float near the guess input box in certain viewport sizes. Needs layout fix.
-2. **`puzzleNumber` in share text** — `generateShareText` receives `currentCountry.id` (ISO numeric) as the puzzle number. Needs a real sequential puzzle index (e.g. days since launch date).
-3. **`unlockBonus()`** is a stub. Bonus mode UI exists but is not wired to anything meaningful.
-4. **`Silhouette.revealed`** prop is always passed as `false` from App.jsx — the country-name overlay never shows during active play (intentional), but the code is wired and works if `revealed={true}` is passed.
+- Project URL: `https://pkteppkfontnygzvwsof.supabase.co`
+- Env vars needed in Vercel: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
+- Tables: run `src/data/schema.sql` in Supabase SQL editor
+- Auth providers to enable: Google OAuth, Email (magic link)
+- Set redirect URL in Supabase Auth settings: `https://globe-iq-one.vercel.app`
 
 ---
 
-## What needs to be built next
+## Still needed
 
-1. **Supabase auth** — magic link + Google OAuth. `.env` already has `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` (currently empty). Wire up the client in a `src/lib/supabase.js` module. Goals: user accounts, cloud sync for atlas + streak, leaderboard.
-2. **Sound effects** — short audio cues for correct guess, wrong guess, game win/loss, hint reveal. Lightweight (Web Audio API or small MP3s).
-3. **Deploy to Vercel** — add `vercel.json` if needed, connect repo, set env vars (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) in Vercel dashboard.
-4. **Fix floating silhouette** — silhouette overlaps or floats near the guess input in some viewports. Investigate layout stacking in `.game-area`.
+1. **Large country silhouette scaling** — Russia, USA, Canada appear too small in the 220×220 box
+2. **Test auth end-to-end** — Google OAuth + magic link sign-in on live site
+3. **Ad integration** — AdSense or similar
+4. **Stripe Pro tier** — $3–5/month unlock
+5. **Custom domain**
+6. **Launch marketing**
+
+---
+
+## Known issues / TODOs
+
+1. **`puzzleNumber` in share text** — uses ISO numeric ID, needs sequential puzzle index (days since launch).
+2. **`unlockBonus()`** — stub in `usePuzzleMode`, not wired to anything.
+3. **`Silhouette.revealed`** — always `false` from App.jsx (intentional during play).
+4. **`StreakMap.jsx`** — still exists, never rendered, can be deleted.
 
 ---
 
 ## Quick architectural cheatsheet
 
-- **Where does game state live?** `useGameLogic` owns `currentCountry`, `guesses`, `guessCount`, `gameStatus`. Siblings: `useAtlas`, `useStreak`, `usePuzzleMode`.
-- **Where does CSS live?** `src/styles/main.css` for all rules. Component-local `style={...}` only for dynamic theme-driven values (continent colors, progress widths, etc.).
-- **Where do daily rollovers happen?** Each hook does its own `todayKey()` comparison on mount.
-- **How does country selection avoid repeats?** Two-layer filter in `pickFromAvailable()`: (1) exclude `collectedCountries`, (2) exclude last 5 seen (`globeiq_recent`). Falls back to collected-only pool if recent filter leaves fewer than 3 options.
-- **How does alias matching work?** `useGameLogic.makeGuess()` checks guess against `country.name` and `country.aliases[]` (case-insensitive). `GuessInput` autocomplete also matches on aliases but always displays/submits the canonical name.
-- **Where is the world-map z-stacking decided?** `WorldMap` is `position: fixed; z-index: 0`. `#globeiq-header` and `.game-area` are `position: relative; z-index: 1`.
-- **What fields does each country object require?** `id`, `name`, `continent`, `population`, `capital`, `flagEmoji`, `difficulty`, `climate`, `borders`, `knownFor`, `funFact`, `personalityTags`, `continentColor`. Optional: `aliases`.
+- **Game state**: `useGameLogic` owns `currentCountry`, `guesses`, `guessCount`, `gameStatus`.
+- **CSS**: `src/styles/main.css` for all rules. Inline `style` only for dynamic theme values.
+- **Daily rollovers**: each hook does its own `todayKey()` comparison on mount.
+- **Country selection**: excludes collected + last 5 recent. Falls back if pool < 3.
+- **Alias matching**: `useGameLogic.makeGuess()` checks `country.name` and `country.aliases[]`.
+- **Z-stacking**: `WorldMap` is `position: fixed; z-index: 0`. Header/game area `z-index: 1`. `AuthModal` portal `z-index: 99999`.
+- **Sound effects**: wrong guess detected via `prevGuessCountRef` + `guessCount` effect; win/loss via separate `gameStatus` effect with `soundReadyRef` to skip initial mount.
