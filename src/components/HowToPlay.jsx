@@ -1,7 +1,7 @@
 const hintRows = [
-  { n: 1, icon: '🌍', text: 'Continent' },
-  { n: 2, icon: '🌡️', text: 'Climate & Terrain' },
-  { n: 3, icon: '🗺️', text: 'Borders' },
+  { n: 1, icon: '🌡️', text: 'Climate & Terrain' },
+  { n: 2, icon: '🗺️', text: 'Borders' },
+  { n: 3, icon: '📍', text: 'Region' },
   { n: 4, icon: '🏆', text: 'Known For' },
   { n: 5, icon: '🏙️', text: 'Capital City' },
   { n: 6, icon: '🚩', text: 'Flag' },
