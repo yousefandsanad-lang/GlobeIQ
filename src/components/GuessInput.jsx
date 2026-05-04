@@ -3,9 +3,11 @@ import { useState, useRef, useEffect, useMemo } from 'react'
 export default function GuessInput({ onGuess, disabled, countries, countryNames, previousGuesses }) {
   const [value, setValue] = useState('')
   const [showDropdown, setShowDropdown] = useState(false)
+  const [dropdownDirection, setDropdownDirection] = useState('down')
   const [error, setError] = useState('')
   const [shaking, setShaking] = useState(false)
   const errorTimerRef = useRef(null)
+  const containerRef = useRef(null)
 
   useEffect(() => () => clearTimeout(errorTimerRef.current), [])
 
@@ -88,7 +90,7 @@ export default function GuessInput({ onGuess, disabled, countries, countryNames,
   const dropdownOpen = showDropdown && filteredCountries.length > 0
 
   return (
-    <div className="guess-input-container" style={{ position: 'relative' }}>
+    <div ref={containerRef} className="guess-input-container" style={{ position: 'relative' }}>
       <div className="guess-counter">
         {guessesLeft} {guessesLeft === 1 ? 'guess' : 'guesses'} left
       </div>
@@ -99,12 +101,22 @@ export default function GuessInput({ onGuess, disabled, countries, countryNames,
         value={value}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
-        onFocus={() => setShowDropdown(true)}
+        onFocus={() => {
+          if (containerRef.current) {
+            const rect = containerRef.current.getBoundingClientRect()
+            const spaceBelow = window.innerHeight - rect.bottom
+            const spaceAbove = rect.top
+            setDropdownDirection(spaceBelow < 300 && spaceAbove > spaceBelow ? 'up' : 'down')
+          }
+          setShowDropdown(true)
+        }}
         onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
         placeholder="Type a country name..."
         disabled={disabled}
         style={{
-          borderRadius: dropdownOpen ? '12px 12px 0 0' : undefined,
+          borderRadius: dropdownOpen
+            ? (dropdownDirection === 'up' ? '0 0 12px 12px' : '12px 12px 0 0')
+            : undefined,
         }}
       />
 
@@ -124,13 +136,14 @@ export default function GuessInput({ onGuess, disabled, countries, countryNames,
         <ul
           style={{
             position: 'absolute',
-            top: '100%',
+            top: dropdownDirection === 'down' ? '100%' : 'auto',
+            bottom: dropdownDirection === 'up' ? '100%' : 'auto',
             left: 0,
             width: '100%',
             background: '#1a1a2e',
             border: '1px solid #ffffff20',
-            borderRadius: '0 0 12px 12px',
-            maxHeight: 280,
+            borderRadius: dropdownDirection === 'up' ? '12px 12px 0 0' : '0 0 12px 12px',
+            maxHeight: 250,
             overflowY: 'auto',
             zIndex: 200,
             margin: 0,
