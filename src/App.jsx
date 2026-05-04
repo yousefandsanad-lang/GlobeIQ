@@ -63,7 +63,7 @@ function AlreadyPlayedToday({ country }) {
           Did you know?
         </div>
         <div style={{ color: '#ccc', fontSize: 13, lineHeight: 1.5 }}>
-          {country.funFact}
+          <span style={{ color: '#fff', fontWeight: 700 }}>{country.name}</span> — {country.funFact}
         </div>
       </div>
       <div style={{ color: '#888', fontSize: 12, marginBottom: 6 }}>Next puzzle in</div>
