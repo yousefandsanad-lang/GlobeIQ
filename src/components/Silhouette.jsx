@@ -68,7 +68,9 @@ export default function Silhouette({ continent, revealed, countryName, countryId
     }
   }
 
-  const isMissing = !pathData
+  const isValidPath = pathData && pathData.length > 10 && pathData !== 'M0,0Z' && pathData !== ''
+
+  const isMissing = !isValidPath
 
   return (
     <>
