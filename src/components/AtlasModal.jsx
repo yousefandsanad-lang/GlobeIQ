@@ -1,5 +1,31 @@
 import { createPortal } from 'react-dom'
 
+function flagEmojiToIso2(emoji) {
+  try {
+    return [...emoji]
+      .map(c => String.fromCharCode(c.codePointAt(0) - 0x1F1E6 + 65))
+      .join('')
+      .toLowerCase()
+  } catch {
+    return null
+  }
+}
+
+function FlagImage({ emoji, size = 20 }) {
+  const iso2 = flagEmojiToIso2(emoji)
+  if (!iso2) return <span style={{ fontSize: size, lineHeight: 1 }}>{emoji}</span>
+  return (
+    <img
+      src={`https://flagcdn.com/w40/${iso2}.png`}
+      width={size + 6}
+      height={size}
+      style={{ borderRadius: 2, objectFit: 'cover', display: 'block', flexShrink: 0 }}
+      alt=""
+      onError={e => { e.currentTarget.style.display = 'none' }}
+    />
+  )
+}
+
 const CONTINENT_ORDER = [
   'Africa',
   'Asia',
@@ -172,9 +198,10 @@ export default function AtlasModal({ collectedCountries, onClose, allCountries }
                             boxSizing: 'border-box',
                           }}
                         >
-                          <span style={{ fontSize: 16, lineHeight: 1, flexShrink: 0 }}>
-                            {isCollected ? c.flagEmoji : '🔒'}
-                          </span>
+                          {isCollected
+                            ? <FlagImage emoji={c.flagEmoji} size={16} />
+                            : <span style={{ fontSize: 16, lineHeight: 1, flexShrink: 0 }}>🔒</span>
+                          }
                           <span
                             className="atlas-country-name"
                             style={{
