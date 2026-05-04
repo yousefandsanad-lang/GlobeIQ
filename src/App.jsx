@@ -88,9 +88,19 @@ countries.forEach(c => {
   if (c.aliases) countryNames.push(...c.aliases)
 })
 
+const isDevMode = new URLSearchParams(window.location.search).has('dev')
+
+function devDateKey(offset) {
+  const d = new Date()
+  d.setDate(d.getDate() + offset)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
 function App() {
   const { user, signInWithGoogle, signInWithMagicLink, signOut } = useAuth()
   const { collectedCountries, addToAtlas } = useAtlas(user)
+
+  const [devOffset, setDevOffset] = useState(0)
 
   const {
     currentCountry,
@@ -99,7 +109,7 @@ function App() {
     gameStatus,
     makeGuess,
     resetGame,
-  } = useGameLogic(collectedCountries)
+  } = useGameLogic(collectedCountries, isDevMode ? devDateKey(devOffset) : null)
   const { currentStreak, bestStreak, recordWin, recordLoss } = useStreak(user)
   const { switchMode } = usePuzzleMode()
 
@@ -192,7 +202,31 @@ function App() {
         allCountries={countries}
       />
 
-      <header id="globeiq-header" style={{ position: 'relative', overflow: 'visible' }}>
+      {isDevMode && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, zIndex: 99998,
+          background: '#FF6B35', color: '#fff', fontSize: 12, fontWeight: 700,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
+          padding: '6px 16px',
+        }}>
+          <span>🛠 DEV MODE — offset: {devOffset > 0 ? `+${devOffset}` : devOffset}</span>
+          {currentCountry && <span>Country: {currentCountry.name}</span>}
+          <button
+            onClick={() => { setDevOffset(o => o + 1); setRevealDismissed(false) }}
+            style={{ background: '#fff', color: '#FF6B35', border: 'none', borderRadius: 6, padding: '2px 10px', fontWeight: 700, cursor: 'pointer', fontSize: 12 }}
+          >
+            Next Puzzle →
+          </button>
+          <button
+            onClick={() => { setDevOffset(0); setRevealDismissed(false) }}
+            style={{ background: 'rgba(255,255,255,0.25)', color: '#fff', border: 'none', borderRadius: 6, padding: '2px 10px', fontWeight: 700, cursor: 'pointer', fontSize: 12 }}
+          >
+            Reset
+          </button>
+        </div>
+      )}
+
+      <header id="globeiq-header" style={{ position: 'relative', overflow: 'visible', marginTop: isDevMode ? 36 : 0 }}>
         <h1>🌍 GlobeIQ</h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <button
@@ -246,11 +280,11 @@ function App() {
       </header>
 
       <main className="game-area">
-        {gameStatus === 'playing' && collectedCountries.includes(String(currentCountry.id)) && (
+        {gameStatus === 'playing' && !isDevMode && collectedCountries.includes(String(currentCountry.id)) && (
           <AlreadyPlayedToday country={currentCountry} />
         )}
 
-        {gameStatus === 'playing' && !collectedCountries.includes(String(currentCountry.id)) && (
+        {gameStatus === 'playing' && (isDevMode || !collectedCountries.includes(String(currentCountry.id))) && (
           <>
             <DifficultyAura difficulty={currentCountry.difficulty} />
             <Silhouette

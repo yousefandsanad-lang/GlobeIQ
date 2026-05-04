@@ -5,7 +5,6 @@ const STORAGE_KEY = 'globeiq_daily_country'
 const RECENT_KEY = 'globeiq_recent'
 const MAX_GUESSES = 7
 const RECENT_LIMIT = 5
-const MIN_POOL = 3
 
 function todayKey() {
   const d = new Date()
@@ -35,9 +34,9 @@ function seededIndex(dateStr, poolSize) {
   return Math.abs(hash) % poolSize
 }
 
-function pickFromAvailable() {
+function pickForDate(dateStr) {
   const sorted = [...countries].sort((a, b) => a.id.localeCompare(b.id))
-  return sorted[seededIndex(todayKey(), sorted.length)]
+  return sorted[seededIndex(dateStr, sorted.length)]
 }
 
 function addToRecent(id) {
@@ -46,31 +45,37 @@ function addToRecent(id) {
   saveRecent(updated)
 }
 
-export default function useGameLogic(collectedCountries = []) {
+export default function useGameLogic(collectedCountries = [], devDateKey = null) {
   const [currentCountry, setCurrentCountry] = useState(null)
   const [guesses, setGuesses] = useState([])
   const [guessCount, setGuessCount] = useState(0)
   const [gameStatus, setGameStatus] = useState('playing')
   const [loaded, setLoaded] = useState(false)
 
+  const dateKey = devDateKey ?? todayKey()
+
   useEffect(() => {
+    const todaysCountry = pickForDate(dateKey)
     let restored = null
-    const todaysCountry = pickFromAvailable()
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (raw) {
-        const saved = JSON.parse(raw)
-        if (saved.date === todayKey() && saved.countryId === todaysCountry.id) {
-          restored = {
-            country: todaysCountry,
-            guesses: saved.guesses ?? [],
-            guessCount: saved.guessCount ?? 0,
-            gameStatus: saved.gameStatus ?? 'playing',
+
+    // In dev mode skip localStorage restore so every offset starts fresh
+    if (!devDateKey) {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY)
+        if (raw) {
+          const saved = JSON.parse(raw)
+          if (saved.date === dateKey && saved.countryId === todaysCountry.id) {
+            restored = {
+              country: todaysCountry,
+              guesses: saved.guesses ?? [],
+              guessCount: saved.guessCount ?? 0,
+              gameStatus: saved.gameStatus ?? 'playing',
+            }
           }
         }
+      } catch {
+        restored = null
       }
-    } catch {
-      restored = null
     }
 
     if (restored) {
@@ -79,17 +84,19 @@ export default function useGameLogic(collectedCountries = []) {
       setGuessCount(restored.guessCount)
       setGameStatus(restored.gameStatus)
     } else {
-      const next = pickFromAvailable()
-      addToRecent(next.id)
-      setCurrentCountry(next)
+      addToRecent(todaysCountry.id)
+      setCurrentCountry(todaysCountry)
+      setGuesses([])
+      setGuessCount(0)
+      setGameStatus('playing')
     }
     setLoaded(true)
-  }, [])
+  }, [dateKey])
 
   useEffect(() => {
-    if (!loaded || !currentCountry) return
+    if (!loaded || !currentCountry || devDateKey) return
     const payload = {
-      date: todayKey(),
+      date: dateKey,
       countryId: currentCountry.id,
       guesses,
       guessCount,
@@ -97,9 +104,7 @@ export default function useGameLogic(collectedCountries = []) {
     }
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
-    } catch {
-      // ignore quota / unavailable storage
-    }
+    } catch {}
   }, [loaded, currentCountry, guesses, guessCount, gameStatus])
 
   function makeGuess(name) {
@@ -111,7 +116,7 @@ export default function useGameLogic(collectedCountries = []) {
       c.name.toLowerCase() === trimmed.toLowerCase() ||
       (c.aliases?.some(a => a.toLowerCase() === trimmed.toLowerCase()) ?? false)
     )
-    if (guessedCountry && collectedCountries.includes(String(guessedCountry.id))) {
+    if (!devDateKey && guessedCountry && collectedCountries.includes(String(guessedCountry.id))) {
       return 'already_collected'
     }
 
@@ -133,7 +138,7 @@ export default function useGameLogic(collectedCountries = []) {
   }
 
   function resetGame() {
-    const next = pickFromAvailable()
+    const next = pickForDate(dateKey)
     addToRecent(next.id)
     setCurrentCountry(next)
     setGuesses([])

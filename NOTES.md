@@ -14,9 +14,11 @@ Run with `npm run dev` → http://localhost:5173
 
 Live at: https://globe-iq-one.vercel.app
 
+Dev mode: https://globe-iq-one.vercel.app?dev
+
 ---
 
-## Current status (as of 2026-05-03)
+## Current status (as of 2026-05-04)
 
 ### Completed
 
@@ -42,7 +44,17 @@ Live at: https://globe-iq-one.vercel.app
 - **AuthModal portal**: renders via `createPortal` to `document.body`, z-index 99999/100000
 - **Mobile Safari SVG fix**: explicit `xmlns`, `width`/`height` attrs, try/catch on projection
 - **funFacts sanitised**: 124 funFacts updated — no country name, capital name, or immediately-identifying references remain
-- **AtlasModal**: Pokédex-style modal grouped by continent; click 🗺️ X/195 badge to open; collected = flag + name, undiscovered = 🔒 + ????????; sticky continent headers; 44px tap targets; single-column + 85vh on screens under 400px; React Portal
+- **AtlasModal**: Pokédex-style modal grouped by continent; click 🗺️ X/195 badge to open; collected = flag + name, undiscovered = 🔒 + ????????; sticky continent headers; 44px tap targets; single-column + 85vh on screens under 400px; React Portal. Uses `flagcdn.com` images (not emoji) for Windows compatibility.
+- **South America purple**: continent theme `#9B59B6` — all 6 continents now visually distinct
+- **Hint order changed**: Continent removed (color already shows it). New order: Climate & Terrain → Borders → Region → Known For → Capital → Flag
+- **Region field**: all 195 countries have `region` field (e.g. "West Africa", "Southeast Asia", "Caribbean", "Southern Cone", "Baltic States", "Microstates")
+- **Shared daily puzzle**: everyone on the same calendar day gets the same country. Seeded with deterministic date hash over full sorted 195-country list. Stale localStorage is discarded if `countryId` doesn't match today's seed.
+- **Spoiler-free share card**: no country name, no fun fact. Shows emoji grid + "Day N" counter (days since 2026-05-04) + win/loss line + play link.
+- **No infinite loop**: "Next Puzzle" button removed. After win/loss, RevealCard shows live countdown to midnight (HH:MM:SS in continent color).
+- **Already-collected screen**: if today's daily country is already in atlas, shows flag + "You already have X!" + fun fact + countdown instead of broken game state.
+- **Hints revealed on review**: when win/loss card is minimised, all 6 hints shown (`guessCount=6`)
+- **Flag hint row height**: `.hint-row` uses `display:flex; align-items:center` so 32px flag emoji doesn't inflate row height
+- **Dev mode**: `?dev` URL param enables orange toolbar with country name, offset counter, "Next Puzzle →" and "Reset" buttons. Bypasses already-collected wall and localStorage restore. No effect for regular players.
 
 ### Header
 - 🌍 GlobeIQ logo left
@@ -57,39 +69,39 @@ Live at: https://globe-iq-one.vercel.app
 ### Entry / root
 
 - **`src/main.jsx`** — Vite entry. Mounts `<App />` in `#root`.
-- **`src/App.jsx`** — Root component. Hook order: `useAuth` first, then `useAtlas(user)`, `useGameLogic`, `useStreak(user)`, `usePuzzleMode`. Sound effects via two `useEffect`s (win/loss + wrong guess). Renders `WorldMap`, header, game area, `HowToPlay` modal, `AuthModal`, `AtlasModal`.
+- **`src/App.jsx`** — Root component. Hook order: `useAuth` first, then `useAtlas(user)`, `useGameLogic(collectedCountries, devDateKey)`, `useStreak(user)`, `usePuzzleMode`. Dev mode detected via `URLSearchParams`. `devOffset` state drives `devDateKey`. Sound effects via two `useEffect`s. Renders `WorldMap`, header, dev toolbar, game area, modals.
 - **`src/index.css`** — minimal CSS reset.
 - **`src/styles/main.css`** — all GlobeIQ component styling.
 
 ### Data + utils
 
-- **`src/data/countries.js`** — 195 country objects. Each has: `id` (3-digit ISO numeric string), `name`, `continent`, `population`, `capital`, `flagEmoji`, `difficulty` (easy/medium/hard), `climate`, `borders`, `knownFor`, `funFact`, `personalityTags`, `continentColor`. Optional: `aliases`. funFacts never reveal country name, capital, or flag.
-- **`src/data/schema.sql`** — Supabase table definitions: `players`, `atlas`, `streaks`. Run in Supabase SQL editor to create tables.
-- **`src/utils/continentTheme.js`** — `getContinentTheme(continent)` → `{ primary, background, glow }`.
-- **`src/utils/shareCard.js`** — `generateShareText(country, guesses, won, puzzleNumber)`.
-- **`src/utils/supabase.js`** — Supabase client singleton from `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY`.
-- **`src/utils/syncService.js`** — `createPlayerIfNotExists`, `syncAtlasToCloud`, `loadAtlasFromCloud`, `syncStreakToCloud`, `loadStreakFromCloud`. All try/catch, fail silently.
-- **`src/utils/sound.js`** — Web Audio API sound effects: `playCorrect`, `playWrong`, `playReveal`, `playStreak`. No external libs.
+- **`src/data/countries.js`** — 195 country objects. Each has: `id` (3-digit ISO numeric string), `name`, `continent`, `region`, `population`, `capital`, `flagEmoji`, `difficulty` (easy/medium/hard), `climate`, `borders`, `knownFor`, `funFact`, `personalityTags`, `continentColor`. Optional: `aliases`. funFacts never reveal country name, capital, or flag.
+- **`src/data/schema.sql`** — Supabase table definitions: `players`, `atlas`, `streaks`.
+- **`src/utils/continentTheme.js`** — `getContinentTheme(continent)` → `{ primary, background, glow }`. South America = `#9B59B6`.
+- **`src/utils/shareCard.js`** — `generateShareText(country, guesses, won)`. Spoiler-free: emoji grid + Day N + no country name. Launch date: `2026-05-04`.
+- **`src/utils/supabase.js`** — Supabase client singleton.
+- **`src/utils/syncService.js`** — atlas + streak cloud sync. All try/catch, fail silently.
+- **`src/utils/sound.js`** — Web Audio API: `playCorrect`, `playWrong`, `playReveal`, `playStreak`.
 
 ### Hooks (`src/hooks/`)
 
-- **`useGameLogic(collectedCountries)`** — main game state. `MAX_GUESSES = 7`. Picks country, manages guesses, persists to localStorage.
-- **`useAtlas(user)`** — collected country IDs. On mount: merges localStorage + cloud if logged in. `addToAtlas` syncs to cloud.
-- **`useStreak(user)`** — streak tracking. On mount: takes max of local + cloud values. `recordWin`/`recordLoss` sync to cloud.
-- **`useAuth()`** — `user`, `loading`, `signInWithGoogle`, `signInWithMagicLink`, `signOut`, `onAuthStateChange` listener.
-- **`usePuzzleMode()`** — daily vs bonus mode + bonus play limit stub.
+- **`useGameLogic(collectedCountries, devDateKey)`** — main game state. `MAX_GUESSES = 7`. Picks country via `seededIndex(dateKey, 195)` over full sorted list. `devDateKey` bypasses localStorage restore and `already_collected` check. Persists to localStorage (skipped in dev mode).
+- **`useAtlas(user)`** — collected country IDs. On mount: merges localStorage + cloud if logged in.
+- **`useStreak(user)`** — streak tracking. `recordWin`/`recordLoss` sync to cloud.
+- **`useAuth()`** — `user`, `loading`, `signInWithGoogle`, `signInWithMagicLink`, `signOut`.
+- **`usePuzzleMode()`** — daily vs bonus mode stub.
 
 ### Components (`src/components/`)
 
-- **`WorldMap.jsx`** — fixed background SVG, 50m resolution. Hover tooltip on collected countries. No `willChange`/`transform` (avoids stacking context). Projection: `geoNaturalEarth1().scale(220).translate([500, 270])`.
-- **`Silhouette.jsx`** — 220×220 country shape. Two-step centering (fitExtent + bounds centroid). `isValidPath` check (length > 10, not `"M0,0Z"`, not empty) — invalid paths fall through to mystery card. iOS Safari: `xmlnsXlink`, `version="1.1"`, backface-visibility hidden, `translate3d(0,0,0)`. Falls back to animated "Micro Nation" mystery card for missing or invalid topology.
+- **`WorldMap.jsx`** — fixed background SVG, 50m resolution. Hover tooltip on collected countries. No `willChange`/`transform`. Projection: `geoNaturalEarth1().scale(220).translate([500, 270])`.
+- **`Silhouette.jsx`** — 220×220 country shape. Two-step centering. `isValidPath` check (length > 10, not `"M0,0Z"`). iOS Safari: `xmlnsXlink`, `version="1.1"`, backface-visibility hidden, `translate3d(0,0,0)`. Mystery card fallback.
 - **`DifficultyAura.jsx`** — pill badge: green/amber/red.
-- **`HintPanel.jsx`** — 6 hints revealed one per wrong guess: Continent → Climate → Borders → Known For → Capital → Flag.
-- **`GuessInput.jsx`** — autocomplete with frosted glass dropdown. Keyboard nav: ArrowDown/Up/Enter/Escape, `highlightedIndex` state, `scrollIntoView`. Flips above input near screen bottom. Auto-focuses on `puzzleKey` change. Dropdown suppressed on programmatic focus (`userInteracted` state).
-- **`RevealCard.jsx`** — end-of-game card with facts, share button, dismiss.
-- **`HowToPlay.jsx`** — compact modal, fits without scrolling, correct hint order.
-- **`AuthModal.jsx`** — Google + magic link auth. React Portal to `document.body`. z-index 99999.
-- **`AtlasModal.jsx`** — Pokédex-style atlas. Groups all 195 countries by continent. Collected = flag + name; undiscovered = 🔒 + ????????. Sticky continent headers (`position: sticky; top: 0; background: #0F1420; z-index: 10`). 44px min-height tap targets. `@media (max-width: 399px)`: single-column grid, 11px names, 95% width, 85vh max-height, 16px border-radius. React Portal to `document.body`. z-index 99999.
+- **`HintPanel.jsx`** — 6 hints: Climate → Borders → Region → Known For → Capital → Flag. `guessCount` controls how many are visible.
+- **`GuessInput.jsx`** — autocomplete with frosted glass dropdown. Keyboard nav: ArrowDown/Up/Enter/Escape. Flips above input near screen bottom. Auto-focuses on `puzzleKey` change.
+- **`RevealCard.jsx`** — end-of-game card. Live `useCountdown` hook (HH:MM:SS to midnight) replaces old Next button. No `onNext` prop.
+- **`HowToPlay.jsx`** — compact modal. Hint order: Climate → Borders → Region → Known For → Capital → Flag.
+- **`AuthModal.jsx`** — Google + magic link. React Portal. z-index 99999.
+- **`AtlasModal.jsx`** — Pokédex atlas. Grouped by continent. Flag images from `flagcdn.com`. Sticky headers. 44px tap targets. Mobile: single column under 400px. React Portal.
 - **`StreakMap.jsx`** — exists but not rendered. Can be deleted.
 
 ---
@@ -98,13 +110,27 @@ Live at: https://globe-iq-one.vercel.app
 
 | Guess | Hint revealed |
 |---|---|
-| 1 | 🌍 Continent |
-| 2 | 🌡️ Climate & Terrain |
-| 3 | 🗺️ Borders |
+| 1 | 🌡️ Climate & Terrain |
+| 2 | 🗺️ Borders |
+| 3 | 📍 Region |
 | 4 | 🏆 Known For |
 | 5 | 🏙️ Capital City |
 | 6 | 🚩 Flag |
 | 7 | (no new hint — last chance) |
+
+The silhouette border color communicates continent visually before any guesses.
+
+---
+
+## Dev mode
+
+URL: `https://globe-iq-one.vercel.app?dev`
+
+- Orange toolbar at top: shows current country name + day offset
+- "Next Puzzle →" increments `devOffset` by 1 (seeds next day's country)
+- "Reset" returns offset to 0
+- Bypasses already-collected wall and localStorage restore
+- Invisible to regular players (no `?dev` param)
 
 ---
 
@@ -119,11 +145,13 @@ Live at: https://globe-iq-one.vercel.app
 | `globeiq_mode` | `usePuzzleMode` | `{ mode, bonusPlaysToday, date }` |
 | `globeiq_visited` | `App.jsx` | `"true"` |
 
-**Reset everything:**
+**Reset everything (browser console):**
 ```js
 ;['globeiq_daily_country','globeiq_atlas','globeiq_streak','globeiq_mode','globeiq_visited','globeiq_recent']
   .forEach(k => localStorage.removeItem(k))
+location.reload()
 ```
+Note: if logged in, Supabase re-syncs atlas on reload. Sign out first to fully reset.
 
 ---
 
@@ -132,15 +160,15 @@ Live at: https://globe-iq-one.vercel.app
 - Project URL: `https://pkteppkfontnygzvwsof.supabase.co`
 - Env vars needed in Vercel: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
 - Tables: run `src/data/schema.sql` in Supabase SQL editor
-- Auth providers to enable: Google OAuth, Email (magic link)
-- Set redirect URL in Supabase Auth settings: `https://globe-iq-one.vercel.app`
+- Auth providers: Google OAuth, Email (magic link)
+- Redirect URL in Supabase Auth settings: `https://globe-iq-one.vercel.app`
 
 ---
 
 ## Still needed
 
 1. **Large country silhouette scaling** — Russia, USA, Canada appear too small in the 220×220 box
-2. **Test auth end-to-end** — Google OAuth + magic link sign-in on live site
+2. **Test auth end-to-end** — Google OAuth + magic link on live site
 3. **Ad integration** — AdSense or similar
 4. **Stripe Pro tier** — $3–5/month unlock
 5. **Custom domain**
@@ -150,20 +178,20 @@ Live at: https://globe-iq-one.vercel.app
 
 ## Known issues / TODOs
 
-1. **`puzzleNumber` in share text** — uses ISO numeric ID, needs sequential puzzle index (days since launch).
-2. **`unlockBonus()`** — stub in `usePuzzleMode`, not wired to anything.
-3. **`Silhouette.revealed`** — always `false` from App.jsx (intentional during play).
-4. **`StreakMap.jsx`** — still exists, never rendered, can be deleted.
+1. **`unlockBonus()`** — stub in `usePuzzleMode`, not wired to anything.
+2. **`Silhouette.revealed`** — always `false` from App.jsx (intentional during play).
+3. **`StreakMap.jsx`** — still exists, never rendered, can be deleted.
 
 ---
 
 ## Quick architectural cheatsheet
 
 - **Game state**: `useGameLogic` owns `currentCountry`, `guesses`, `guessCount`, `gameStatus`.
+- **Daily country**: deterministic — `seededIndex(YYYY-MM-DD, 195)` over id-sorted list. Same for everyone on same date.
 - **CSS**: `src/styles/main.css` for all rules. Inline `style` only for dynamic theme values.
 - **Daily rollovers**: each hook does its own `todayKey()` comparison on mount.
-- **Country selection**: excludes collected + last 5 recent. Falls back if pool < 3.
 - **Alias matching**: `useGameLogic.makeGuess()` checks `country.name` and `country.aliases[]`.
-- **Z-stacking**: `WorldMap` is `position: fixed; z-index: 0`. Header/game area `z-index: 1`. `AuthModal` + `AtlasModal` portals `z-index: 99999`.
-- **Sound effects**: wrong guess detected via `prevGuessCountRef` + `guessCount` effect; win/loss via separate `gameStatus` effect with `soundReadyRef` to skip initial mount.
-- **AtlasModal trigger**: `atlas-badge` div in header has `onClick` → `setShowAtlasModal(true)`.
+- **Z-stacking**: `WorldMap` z-index 0. Header/game area z-index 1. Dev toolbar z-index 99998. Portals z-index 99999.
+- **Sound effects**: wrong guess via `prevGuessCountRef`; win/loss via `soundReadyRef` to skip initial mount.
+- **AtlasModal trigger**: atlas-badge `onClick` → `setShowAtlasModal(true)`.
+- **Share card launch date**: `2026-05-04` = Day 1. Day N = `floor((today - launchDate) / 86400000) + 1`.
