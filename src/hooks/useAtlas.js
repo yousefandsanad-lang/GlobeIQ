@@ -3,20 +3,24 @@ import { createPlayerIfNotExists, syncAtlasToCloud, loadAtlasFromCloud } from '.
 
 const STORAGE_KEY = 'globeiq_atlas'
 
+// Storage format: { userId: string | null, ids: string[] }
+// userId null = guest (not signed in)
+// Backward compat: old format was a plain array — treat as guest data
 function readLocal() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) {
       const parsed = JSON.parse(raw)
-      if (Array.isArray(parsed)) return parsed
+      if (Array.isArray(parsed)) return { userId: null, ids: parsed } // old format
+      if (parsed && Array.isArray(parsed.ids)) return parsed           // new format
     }
   } catch {}
-  return []
+  return { userId: null, ids: [] }
 }
 
-function writeLocal(ids) {
+function writeLocal(userId, ids) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(ids))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ userId, ids }))
   } catch {}
 }
 
@@ -30,12 +34,17 @@ export default function useAtlas(user) {
       if (user) {
         await createPlayerIfNotExists(user.id)
         const cloud = await loadAtlasFromCloud(user.id)
-        const merged = [...new Set([...local, ...cloud])]
+
+        // Only merge local data if it belongs to this user or is anonymous guest data.
+        // If it belongs to a different account, ignore it — use cloud only.
+        const isOwnLocal = local.userId === null || local.userId === user.id
+        const merged = [...new Set([...(isOwnLocal ? local.ids : []), ...cloud])]
+
         setCollectedCountries(merged)
-        writeLocal(merged)
+        writeLocal(user.id, merged)
         if (merged.length > 0) syncAtlasToCloud(user.id, merged)
       } else {
-        setCollectedCountries(local)
+        setCollectedCountries(local.ids)
       }
     }
     init()
@@ -45,7 +54,7 @@ export default function useAtlas(user) {
     setCollectedCountries(prev => {
       if (prev.includes(String(countryId))) return prev
       const next = [...prev, String(countryId)]
-      writeLocal(next)
+      writeLocal(user?.id ?? null, next)
       if (user) syncAtlasToCloud(user.id, next)
       return next
     })
