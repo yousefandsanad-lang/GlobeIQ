@@ -50,6 +50,12 @@ function pickForDate(dateStr) {
   return sorted[seededIndex(dateStr, sorted.length)]
 }
 
+function gtag(...args) {
+  if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
+    window.gtag(...args)
+  }
+}
+
 function addToRecent(id) {
   const recent = loadRecent()
   const updated = [String(id), ...recent.filter(r => r !== String(id))].slice(0, RECENT_LIMIT)
@@ -100,6 +106,7 @@ export default function useGameLogic(collectedCountries = [], devDateKey = null)
       setGuesses([])
       setGuessCount(0)
       setGameStatus('playing')
+      gtag('event', 'game_started', { country_difficulty: todaysCountry.difficulty })
     }
     setLoaded(true)
   }, [dateKey])
@@ -143,8 +150,10 @@ export default function useGameLogic(collectedCountries = [], devDateKey = null)
 
     if (isCorrect) {
       setGameStatus('won')
+      gtag('event', 'game_won', { guesses_taken: newCount })
     } else if (newCount >= MAX_GUESSES) {
       setGameStatus('lost')
+      gtag('event', 'game_lost')
     }
   }
 
