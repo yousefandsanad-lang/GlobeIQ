@@ -1,5 +1,5 @@
 import { feature } from 'topojson-client'
-import { geoNaturalEarth1, geoPath } from 'd3-geo'
+import { geoNaturalEarth1, geoPath, geoArea } from 'd3-geo'
 import worldData from 'world-atlas/countries-50m.json'
 import { getContinentTheme } from '../utils/continentTheme'
 import gameCountries from '../data/countries'
@@ -47,10 +47,24 @@ export default function Silhouette({ continent, revealed, countryName, countryId
   let pathData = null
   if (countryFeature) {
     try {
-      const projection = geoNaturalEarth1()
-        .fitExtent([[25, 25], [175, 175]], countryFeature)
+      // For countries with overseas territories (France, USA, etc.), fit and
+      // center based on the largest polygon only so the main landmass fills
+      // the box. The full feature is still rendered; small territories get
+      // projected off-screen and clipped by the SVG viewport.
+      let featureForFitting = countryFeature
+      if (countryFeature.geometry.type === 'MultiPolygon') {
+        const largestCoords = countryFeature.geometry.coordinates.reduce((best, poly) => {
+          const f = { type: 'Feature', geometry: { type: 'Polygon', coordinates: poly }, properties: {} }
+          return geoArea(f) > geoArea({ type: 'Feature', geometry: { type: 'Polygon', coordinates: best }, properties: {} })
+            ? poly : best
+        }, countryFeature.geometry.coordinates[0])
+        featureForFitting = { type: 'Feature', geometry: { type: 'Polygon', coordinates: largestCoords }, properties: {} }
+      }
 
-      const centroid = geoPath().projection(projection).centroid(countryFeature)
+      const projection = geoNaturalEarth1()
+        .fitExtent([[25, 25], [175, 175]], featureForFitting)
+
+      const centroid = geoPath().projection(projection).centroid(featureForFitting)
       const translate = projection.translate()
       projection.translate([
         translate[0] + (100 - centroid[0]),
@@ -58,7 +72,7 @@ export default function Silhouette({ continent, revealed, countryName, countryId
       ])
 
       const pathMaker = geoPath().projection(projection)
-      const renderedArea = pathMaker.area(countryFeature)
+      const renderedArea = pathMaker.area(featureForFitting)
       if (renderedArea >= 100) {
         pathData = pathMaker(countryFeature)
       }
