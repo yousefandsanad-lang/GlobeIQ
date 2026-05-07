@@ -1,93 +1,71 @@
 import { useState, useEffect } from 'react'
 import countries from '../data/countries.js'
 
-const STORAGE_KEY = 'globeiq_daily_country'
-const RECENT_KEY = 'globeiq_recent'
+const GAME_KEY = 'globeiq_current_game'
+const FAILS_KEY = 'globeiq_recent_fails'
 const MAX_GUESSES = 7
-const RECENT_LIMIT = 5
+const FAILS_LIMIT = 10
+const MIN_POOL = 3
 
-function todayKey() {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
-
-function loadRecent() {
+function loadFails() {
   try {
-    const raw = localStorage.getItem(RECENT_KEY)
+    const raw = localStorage.getItem(FAILS_KEY)
     return raw ? JSON.parse(raw) : []
-  } catch {
-    return []
-  }
+  } catch { return [] }
 }
 
-function saveRecent(ids) {
-  try {
-    localStorage.setItem(RECENT_KEY, JSON.stringify(ids))
-  } catch {}
+function saveFails(ids) {
+  try { localStorage.setItem(FAILS_KEY, JSON.stringify(ids)) } catch {}
 }
 
-function seededIndex(dateStr, poolSize) {
-  let hash = 0
-  for (let i = 0; i < dateStr.length; i++) {
-    hash = (hash * 31 + dateStr.charCodeAt(i)) & 0xffffffff
-  }
-  return Math.abs(hash) % poolSize
+function recordFail(id) {
+  const fails = loadFails()
+  const updated = [String(id), ...fails.filter(f => f !== String(id))].slice(0, FAILS_LIMIT)
+  saveFails(updated)
 }
 
-const DATE_OVERRIDES = {
-  '2026-05-04': '170', // Colombia     (medium) — launch day override
-  '2026-05-05': '710', // South Africa (easy)  — replaces Ethiopia (medium)
-  '2026-05-06': '250', // France       (easy)  — replaces Eritrea (hard)
-  '2026-05-08': '152', // Chile    (medium)  — replaces Fiji (hard, no silhouette)
-}
-
-function pickForDate(dateStr) {
+function pickNext(collectedCountries) {
+  const fails = loadFails()
   const sorted = [...countries].sort((a, b) => a.id.localeCompare(b.id))
-  const overrideId = DATE_OVERRIDES[dateStr]
-  if (overrideId) {
-    return sorted.find(c => c.id === overrideId) ?? sorted[seededIndex(dateStr, sorted.length)]
-  }
-  return sorted[seededIndex(dateStr, sorted.length)]
+
+  // Exclude already collected
+  let pool = sorted.filter(c => !collectedCountries.includes(String(c.id)))
+  if (pool.length < MIN_POOL) pool = sorted  // fallback: all countries
+
+  // Exclude recently failed
+  const withoutFails = pool.filter(c => !fails.includes(String(c.id)))
+  const finalPool = withoutFails.length >= MIN_POOL ? withoutFails : pool
+
+  return finalPool[Math.floor(Math.random() * finalPool.length)]
 }
 
-function addToRecent(id) {
-  const recent = loadRecent()
-  const updated = [String(id), ...recent.filter(r => r !== String(id))].slice(0, RECENT_LIMIT)
-  saveRecent(updated)
-}
-
-export default function useGameLogic(collectedCountries = [], devDateKey = null) {
+export default function useGameLogic(collectedCountries = []) {
   const [currentCountry, setCurrentCountry] = useState(null)
   const [guesses, setGuesses] = useState([])
   const [guessCount, setGuessCount] = useState(0)
   const [gameStatus, setGameStatus] = useState('playing')
   const [loaded, setLoaded] = useState(false)
 
-  const dateKey = devDateKey ?? todayKey()
-
   useEffect(() => {
-    const todaysCountry = pickForDate(dateKey)
     let restored = null
-
-    // In dev mode skip localStorage restore so every offset starts fresh
-    if (!devDateKey) {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY)
-        if (raw) {
-          const saved = JSON.parse(raw)
-          if (saved.date === dateKey && saved.countryId === todaysCountry.id) {
+    try {
+      const raw = localStorage.getItem(GAME_KEY)
+      if (raw) {
+        const saved = JSON.parse(raw)
+        // Only restore in-progress games for uncollected countries
+        if (saved.gameStatus === 'playing') {
+          const country = countries.find(c => c.id === saved.countryId)
+          if (country && !collectedCountries.includes(String(country.id))) {
             restored = {
-              country: todaysCountry,
+              country,
               guesses: saved.guesses ?? [],
               guessCount: saved.guessCount ?? 0,
-              gameStatus: saved.gameStatus ?? 'playing',
+              gameStatus: 'playing',
             }
           }
         }
-      } catch {
-        restored = null
       }
-    }
+    } catch { restored = null }
 
     if (restored) {
       setCurrentCountry(restored.country)
@@ -95,33 +73,28 @@ export default function useGameLogic(collectedCountries = [], devDateKey = null)
       setGuessCount(restored.guessCount)
       setGameStatus(restored.gameStatus)
     } else {
-      addToRecent(todaysCountry.id)
-      setCurrentCountry(todaysCountry)
-      setGuesses([])
-      setGuessCount(0)
-      setGameStatus('playing')
-      if (typeof gtag !== 'undefined') {
-        gtag('event', 'game_started', {
-          difficulty: todaysCountry.difficulty,
-          continent: todaysCountry.continent,
-        })
-      }
+      const next = pickNext(collectedCountries)
+      setCurrentCountry(next)
     }
     setLoaded(true)
-  }, [dateKey])
+  }, [])
 
+  // Persist in-progress game only
   useEffect(() => {
-    if (!loaded || !currentCountry || devDateKey) return
-    const payload = {
-      date: dateKey,
-      countryId: currentCountry.id,
-      guesses,
-      guessCount,
-      gameStatus,
+    if (!loaded || !currentCountry) return
+    if (gameStatus === 'playing') {
+      try {
+        localStorage.setItem(GAME_KEY, JSON.stringify({
+          countryId: currentCountry.id,
+          guesses,
+          guessCount,
+          gameStatus,
+        }))
+      } catch {}
+    } else {
+      // Clear saved game when done
+      try { localStorage.removeItem(GAME_KEY) } catch {}
     }
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
-    } catch {}
   }, [loaded, currentCountry, guesses, guessCount, gameStatus])
 
   function makeGuess(name) {
@@ -133,7 +106,7 @@ export default function useGameLogic(collectedCountries = [], devDateKey = null)
       c.name.toLowerCase() === trimmed.toLowerCase() ||
       (c.aliases?.some(a => a.toLowerCase() === trimmed.toLowerCase()) ?? false)
     )
-    if (!devDateKey && guessedCountry && collectedCountries.includes(String(guessedCountry.id))) {
+    if (guessedCountry && collectedCountries.includes(String(guessedCountry.id))) {
       return 'already_collected'
     }
 
@@ -141,7 +114,7 @@ export default function useGameLogic(collectedCountries = [], devDateKey = null)
     setGuesses(prev => [...prev, name])
     setGuessCount(newCount)
 
-    const normalizedGuess = name.trim().toLowerCase()
+    const normalizedGuess = trimmed.toLowerCase()
     const isCorrect =
       currentCountry &&
       (normalizedGuess === currentCountry.name.toLowerCase() ||
@@ -156,6 +129,7 @@ export default function useGameLogic(collectedCountries = [], devDateKey = null)
         })
       }
     } else if (newCount >= MAX_GUESSES) {
+      recordFail(currentCountry.id)
       setGameStatus('lost')
       if (typeof gtag !== 'undefined') {
         gtag('event', 'game_lost', {
@@ -165,21 +139,13 @@ export default function useGameLogic(collectedCountries = [], devDateKey = null)
     }
   }
 
-  function resetGame() {
-    const next = pickForDate(dateKey)
-    addToRecent(next.id)
+  function nextCountry() {
+    const next = pickNext(collectedCountries)
     setCurrentCountry(next)
     setGuesses([])
     setGuessCount(0)
     setGameStatus('playing')
   }
 
-  return {
-    currentCountry,
-    guesses,
-    guessCount,
-    gameStatus,
-    makeGuess,
-    resetGame,
-  }
+  return { currentCountry, guesses, guessCount, gameStatus, makeGuess, nextCountry }
 }

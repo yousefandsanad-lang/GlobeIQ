@@ -1,12 +1,6 @@
-const LAUNCH_DATE = new Date('2026-05-04')
-
-function puzzleDay() {
-  const today = new Date()
-  const diff = Math.floor((today - LAUNCH_DATE) / 86400000)
-  return diff + 1
-}
-
 function generateShareText(country, guesses, won) {
+  if (!won) return null  // no share for losses
+
   const MAX = 7
   const squares = []
   for (let i = 0; i < MAX; i++) {
@@ -18,13 +12,11 @@ function generateShareText(country, guesses, won) {
     }
   }
 
-  const header = `🌍 GlobeIQ — Day ${puzzleDay()}`
+  const header = `🌍 GlobeIQ`
+  const result = `${country.flagEmoji} ${country.name} — got it in ${guesses.length} hint${guesses.length === 1 ? '' : 's'}!`
   const row = squares.join(' ')
-  const result = won
-    ? `Got it in ${guesses.length} hint${guesses.length === 1 ? '' : 's'}! 🎉`
-    : `Couldn't crack today's puzzle 🌍`
 
-  return [header, row, result, '', 'Play today\'s puzzle 👇', 'https://globeiq.app'].join('\n')
+  return [header, result, row, '', 'Play at globeiq.app'].join('\n')
 }
 
 export { generateShareText }
