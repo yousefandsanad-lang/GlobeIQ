@@ -19,7 +19,7 @@ export default function RevealCard({ country, won, onNext, onDismiss }) {
     <div className="reveal-card" ref={cardRef}>
       <div
         className="reveal-header"
-        style={{ background: won ? theme.primary : '#2a2a2a' }}
+        style={{ background: won ? theme.primary : '#2a3a4a' }}
       >
         {onDismiss && (
           <button
@@ -34,13 +34,16 @@ export default function RevealCard({ country, won, onNext, onDismiss }) {
         <div style={{ fontSize: 14, fontWeight: 600, opacity: 0.9 }}>
           {won ? '🎉 Correct!' : '😔 Not this time'}
         </div>
-        <h2>{country.name}</h2>
+        {won
+          ? <h2>{country.name}</h2>
+          : <h2 style={{ opacity: 0.4, letterSpacing: 4, fontSize: 22 }}>? ? ?</h2>
+        }
       </div>
 
       <div className="facts-grid">
         <div className="fact-cell">
           <label>Capital</label>
-          <span>{country.capital || '—'}</span>
+          <span>{won ? country.capital || '—' : '???'}</span>
         </div>
         <div className="fact-cell">
           <label>Population</label>
@@ -70,9 +73,9 @@ export default function RevealCard({ country, won, onNext, onDismiss }) {
       <button
         className="next-button"
         onClick={onNext}
-        style={{ background: theme.primary }}
+        style={{ background: won ? theme.primary : 'linear-gradient(135deg, #4A90D9, #357ABD)' }}
       >
-        Next Country →
+        {won ? 'Next Country →' : 'Try Another Country →'}
       </button>
 
       {showScrollHint && (

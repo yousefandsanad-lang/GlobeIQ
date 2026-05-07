@@ -16,16 +16,6 @@ import { generateShareText } from './utils/shareCard'
 import { playCorrect, playWrong, playReveal } from './utils/sound'
 import countries from './data/countries'
 
-const LOSS_MESSAGES = [
-  "So close! Even the best explorers get lost sometimes 🗺️",
-  "The world has 195 mysteries — this one stays hidden for now! 🌍",
-  "Every explorer faces uncharted territory! Keep going 🧭",
-  "Don't stop now — your atlas awaits! 🌐",
-  "This one slipped away, but there's a whole world left to discover 🌏",
-  "Mystery country: 1, Explorer: 0 — round 2? 🕵️",
-  "The globe is vast and full of surprises! Try another 🌍",
-]
-
 const countryNames = countries.map(c => c.name)
 countries.forEach(c => {
   if (c.aliases) countryNames.push(...c.aliases)
@@ -49,9 +39,6 @@ function App() {
   const { switchMode } = usePuzzleMode()
 
   const [revealDismissed, setRevealDismissed] = useState(false)
-  const [lossMessage] = useState(() =>
-    LOSS_MESSAGES[Math.floor(Math.random() * LOSS_MESSAGES.length)]
-  )
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showAtlasModal, setShowAtlasModal] = useState(false)
 
@@ -189,53 +176,30 @@ function App() {
           </>
         )}
 
-        {/* Win */}
-        {gameStatus === 'won' && !revealDismissed && (
+        {/* Win or Loss — show reveal card */}
+        {(gameStatus === 'won' || gameStatus === 'lost') && !revealDismissed && (
           <>
             <RevealCard
               country={currentCountry}
-              won={true}
+              won={gameStatus === 'won'}
               onNext={handleNext}
               onDismiss={() => setRevealDismissed(true)}
             />
-            <button className="share-button" onClick={handleShare}>
-              📋 Share Result
-            </button>
+            {gameStatus === 'won' && (
+              <button className="share-button" onClick={handleShare}>
+                📋 Share Result
+              </button>
+            )}
           </>
         )}
 
-        {gameStatus === 'won' && revealDismissed && (
+        {/* Dismissed — show pill + all hints */}
+        {(gameStatus === 'won' || gameStatus === 'lost') && revealDismissed && (
           <>
             <button type="button" className="reveal-pill" onClick={() => setRevealDismissed(false)}>
-              🎉 You got it! Tap to see result
+              {gameStatus === 'won' ? '🎉 You got it! Tap to see result' : '😔 Tap to see card'}
             </button>
             <HintPanel guessCount={6} country={currentCountry} />
-          </>
-        )}
-
-        {/* Loss — show silhouette + all hints, no answer */}
-        {gameStatus === 'lost' && (
-          <>
-            <Silhouette
-              continent={currentCountry.continent}
-              revealed={false}
-              countryName={currentCountry.name}
-              countryId={currentCountry.id}
-              flagEmoji={currentCountry.flagEmoji}
-            />
-            <HintPanel guessCount={6} country={currentCountry} />
-            <div style={{ padding: '16px 0 8px' }}>
-              <div style={{ color: '#aaa', fontSize: 15, marginBottom: 20, fontStyle: 'italic', textAlign: 'center' }}>
-                {lossMessage}
-              </div>
-              <button
-                className="next-button"
-                onClick={handleNext}
-                style={{ background: 'linear-gradient(135deg, #4A90D9, #357ABD)' }}
-              >
-                Try Another Country →
-              </button>
-            </div>
           </>
         )}
 
