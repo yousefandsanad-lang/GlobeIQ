@@ -21,14 +21,14 @@ export default function useAuth() {
   async function signInWithGoogle() {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: 'https://globeiq.app' },
     })
   }
 
   async function signInWithMagicLink(email) {
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: window.location.origin },
+      options: { emailRedirectTo: 'https://globeiq.app' },
     })
     if (error) throw error
   }

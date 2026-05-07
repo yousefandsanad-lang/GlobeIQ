@@ -31,7 +31,7 @@ countries.forEach(c => {
   if (c.aliases) countryNames.push(...c.aliases)
 })
 
-const isDevMode = new URLSearchParams(window.location.search).has('dev')
+const isDevMode = import.meta.env.DEV && new URLSearchParams(window.location.search).has('dev')
 
 function App() {
   const { user, signInWithGoogle, signInWithMagicLink, signOut } = useAuth()
