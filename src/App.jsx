@@ -224,14 +224,14 @@ function App() {
               flagEmoji={currentCountry.flagEmoji}
             />
             <HintPanel guessCount={6} country={currentCountry} />
-            <div style={{ textAlign: 'center', padding: '16px 8px 0' }}>
-              <div style={{ color: '#aaa', fontSize: 15, marginBottom: 16, fontStyle: 'italic' }}>
+            <div style={{ padding: '16px 0 8px' }}>
+              <div style={{ color: '#aaa', fontSize: 15, marginBottom: 20, fontStyle: 'italic', textAlign: 'center' }}>
                 {lossMessage}
               </div>
               <button
                 className="next-button"
                 onClick={handleNext}
-                style={{ background: '#4A90D9' }}
+                style={{ background: 'linear-gradient(135deg, #4A90D9, #357ABD)' }}
               >
                 Try Another Country →
               </button>

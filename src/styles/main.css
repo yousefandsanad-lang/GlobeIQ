@@ -352,16 +352,34 @@ body {
   font-style: normal;
 }
 
-.reveal-card .next-button {
-  margin: 0 12px 14px;
-  width: calc(100% - 24px);
-  padding: 10px;
-  border-radius: 12px;
+.next-button {
+  display: block;
+  width: 100%;
+  padding: 14px 20px;
+  border-radius: 14px;
   border: none;
   font-size: 16px;
   font-weight: 700;
   color: white;
   cursor: pointer;
+  letter-spacing: 0.3px;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.next-button:hover {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+.next-button:active {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.reveal-card .next-button {
+  margin: 0 12px 14px;
+  width: calc(100% - 24px);
 }
 
 .reveal-card .review-hints-button {
