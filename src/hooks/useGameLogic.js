@@ -81,6 +81,18 @@ export default function useGameLogic(collectedCountries = [], atlasLoaded = fals
     setLoaded(true)
   }, [atlasLoaded])
 
+  // Safeguard: if currentCountry somehow ends up already collected, replace it immediately
+  useEffect(() => {
+    if (!currentCountry || !atlasLoaded || gameStatus !== 'playing') return
+    if (collectedCountries.includes(String(currentCountry.id))) {
+      const next = pickNext(collectedCountries)
+      setCurrentCountry(next)
+      setGuesses([])
+      setGuessCount(0)
+      try { localStorage.removeItem(GAME_KEY) } catch {}
+    }
+  }, [currentCountry?.id, collectedCountries, atlasLoaded])
+
   // Persist in-progress game only
   useEffect(() => {
     if (!loaded || !currentCountry) return
