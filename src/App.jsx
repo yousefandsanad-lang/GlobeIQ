@@ -12,6 +12,7 @@ import WorldMap from './components/WorldMap'
 import HowToPlay from './components/HowToPlay'
 import AuthModal from './components/AuthModal'
 import AtlasModal from './components/AtlasModal'
+import AtlasComplete from './components/AtlasComplete'
 import { generateShareText } from './utils/shareCard'
 import { playCorrect, playWrong, playReveal } from './utils/sound'
 import countries from './data/countries'
@@ -39,6 +40,7 @@ function App() {
   const { switchMode } = usePuzzleMode()
 
   const [revealDismissed, setRevealDismissed] = useState(false)
+  const [showAtlasComplete, setShowAtlasComplete] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showAtlasModal, setShowAtlasModal] = useState(false)
 
@@ -60,6 +62,11 @@ function App() {
     if (!currentCountry) return
     if (gameStatus === 'won') addToAtlas(currentCountry.id)
   }, [gameStatus, currentCountry])
+
+  // Show completion screen when atlas hits 195
+  useEffect(() => {
+    if (collectedCountries.length >= 195) setShowAtlasComplete(true)
+  }, [collectedCountries.length])
 
   // Sound effects — skip firing on initial mount/restore
   const soundReadyRef = useRef(false)
@@ -219,6 +226,9 @@ function App() {
           allCountries={countries}
           onClose={() => setShowAtlasModal(false)}
         />
+      )}
+      {showAtlasComplete && (
+        <AtlasComplete onContinue={() => setShowAtlasComplete(false)} />
       )}
     </div>
   )
