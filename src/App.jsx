@@ -25,7 +25,7 @@ const isDevMode = import.meta.env.DEV && new URLSearchParams(window.location.sea
 
 function App() {
   const { user, signInWithGoogle, signInWithMagicLink, signOut } = useAuth()
-  const { collectedCountries, addToAtlas } = useAtlas(user)
+  const { collectedCountries, atlasLoaded, addToAtlas } = useAtlas(user)
 
   const {
     currentCountry,
@@ -34,7 +34,7 @@ function App() {
     gameStatus,
     makeGuess,
     nextCountry,
-  } = useGameLogic(collectedCountries)
+  } = useGameLogic(collectedCountries, atlasLoaded)
 
   const { switchMode } = usePuzzleMode()
 

@@ -5,7 +5,6 @@ const GAME_KEY = 'globeiq_current_game'
 const FAILS_KEY = 'globeiq_recent_fails'
 const MAX_GUESSES = 7
 const FAILS_LIMIT = 10
-const MIN_POOL = 3
 
 function loadFails() {
   try {
@@ -28,18 +27,18 @@ function pickNext(collectedCountries) {
   const fails = loadFails()
   const sorted = [...countries].sort((a, b) => a.id.localeCompare(b.id))
 
-  // Exclude already collected
+  // Exclude already collected — never override this with a fallback
   let pool = sorted.filter(c => !collectedCountries.includes(String(c.id)))
-  if (pool.length < MIN_POOL) pool = sorted  // fallback: all countries
+  if (pool.length === 0) pool = sorted  // absolute last resort: all 195 collected somehow
 
-  // Exclude recently failed
+  // Exclude recently failed — only skip if at least 1 uncollected non-failed country remains
   const withoutFails = pool.filter(c => !fails.includes(String(c.id)))
-  const finalPool = withoutFails.length >= MIN_POOL ? withoutFails : pool
+  const finalPool = withoutFails.length >= 1 ? withoutFails : pool
 
   return finalPool[Math.floor(Math.random() * finalPool.length)]
 }
 
-export default function useGameLogic(collectedCountries = []) {
+export default function useGameLogic(collectedCountries = [], atlasLoaded = false) {
   const [currentCountry, setCurrentCountry] = useState(null)
   const [guesses, setGuesses] = useState([])
   const [guessCount, setGuessCount] = useState(0)
@@ -47,6 +46,9 @@ export default function useGameLogic(collectedCountries = []) {
   const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
+    // Wait until atlas is fully loaded so we never pick an already-collected country
+    if (!atlasLoaded) return
+
     let restored = null
     try {
       const raw = localStorage.getItem(GAME_KEY)
@@ -77,7 +79,7 @@ export default function useGameLogic(collectedCountries = []) {
       setCurrentCountry(next)
     }
     setLoaded(true)
-  }, [])
+  }, [atlasLoaded])
 
   // Persist in-progress game only
   useEffect(() => {

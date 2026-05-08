@@ -26,6 +26,7 @@ function writeLocal(userId, ids) {
 
 export default function useAtlas(user) {
   const [collectedCountries, setCollectedCountries] = useState([])
+  const [atlasLoaded, setAtlasLoaded] = useState(false)
 
   useEffect(() => {
     async function init() {
@@ -46,6 +47,7 @@ export default function useAtlas(user) {
       } else {
         setCollectedCountries(local.ids)
       }
+      setAtlasLoaded(true)
     }
     init()
   }, [user?.id])
@@ -68,5 +70,5 @@ export default function useAtlas(user) {
     return collectedCountries.length
   }
 
-  return { collectedCountries, addToAtlas, hasCountry, getAtlasCount }
+  return { collectedCountries, atlasLoaded, addToAtlas, hasCountry, getAtlasCount }
 }
