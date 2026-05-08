@@ -515,59 +515,26 @@ body {
 }
 
 /* ===== Buy Me a Coffee ===== */
-.bmc-float {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  z-index: 900;
-  display: flex;
+.bmc-header {
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 10px 14px;
+  gap: 4px;
+  padding: 6px 11px;
   border-radius: 999px;
-  background: #1a1f2e;
+  background: #ffffff0d;
   border: 1px solid #ffffff20;
-  color: #ccc;
-  font-size: 13px;
+  color: #bbb;
+  font-size: 12px;
   font-weight: 600;
   text-decoration: none;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
-  transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
   white-space: nowrap;
-  overflow: hidden;
-  max-width: 44px;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
-.bmc-float::after {
-  content: 'Buy me a coffee';
-  font-size: 13px;
-  opacity: 0;
-  max-width: 0;
-  transition: opacity 0.2s ease, max-width 0.25s ease;
-  white-space: nowrap;
-  overflow: hidden;
-}
-
-.bmc-float:hover {
-  background: #2a2f3e;
+.bmc-header:hover {
+  background: #ffffff18;
   color: #fff;
   border-color: #ffffff35;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-  max-width: 200px;
-}
-
-.bmc-float:hover::after {
-  opacity: 1;
-  max-width: 140px;
-}
-
-@media (max-width: 480px) {
-  .bmc-float {
-    bottom: 16px;
-    right: 16px;
-    padding: 10px 12px;
-  }
 }
 
 /* ===== DifficultyAura ===== */

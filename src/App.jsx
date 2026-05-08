@@ -140,6 +140,14 @@ function App() {
             onClick={() => setShowAtlasModal(true)}
             style={{ cursor: 'pointer' }}
           >🗺️ {collectedCountries.length}/195</div>
+          <a
+            href="https://buymeacoffee.com/globeiq"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bmc-header"
+          >
+            ☕ Support
+          </a>
           {user ? (
             <button
               onClick={() => { if (window.confirm(`Signed in as ${user.email}\n\nSign out of GlobeIQ?`)) signOut() }}
@@ -231,15 +239,6 @@ function App() {
         <AtlasComplete onContinue={() => setShowAtlasComplete(false)} />
       )}
 
-      <a
-        href="https://buymeacoffee.com/globeiq"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="bmc-float"
-        aria-label="Buy me a coffee"
-      >
-        ☕
-      </a>
     </div>
   )
 }
