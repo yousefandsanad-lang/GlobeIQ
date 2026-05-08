@@ -230,6 +230,16 @@ function App() {
       {showAtlasComplete && (
         <AtlasComplete onContinue={() => setShowAtlasComplete(false)} />
       )}
+
+      <a
+        href="https://buymeacoffee.com/globeiq"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="bmc-float"
+        aria-label="Buy me a coffee"
+      >
+        ☕
+      </a>
     </div>
   )
 }
