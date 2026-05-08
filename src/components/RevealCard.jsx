@@ -78,6 +78,17 @@ export default function RevealCard({ country, won, onNext, onDismiss }) {
         {won ? 'Next Country →' : 'Try Another Country →'}
       </button>
 
+      {won && (
+        <a
+          href="https://buymeacoffee.com/globeiq"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="bmc-button"
+        >
+          ☕ Buy me a coffee
+        </a>
+      )}
+
       {showScrollHint && (
         <div className="scroll-hint">scroll for more ↓</div>
       )}
