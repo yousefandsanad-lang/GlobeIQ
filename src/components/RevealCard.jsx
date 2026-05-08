@@ -65,9 +65,9 @@ export default function RevealCard({ country, won, onNext, onDismiss }) {
         ))}
       </div>
 
-      <div className="fun-fact">
+      <div className="fun-fact" style={won ? {} : { opacity: 0.4, fontStyle: 'italic' }}>
         <span className="fun-fact-label">Did you know?</span>
-        {country.funFact}
+        {won ? country.funFact : 'Guess correctly to unlock this country\'s fun fact!'}
       </div>
 
       <button
