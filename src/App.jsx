@@ -41,6 +41,7 @@ function App() {
 
   const [revealDismissed, setRevealDismissed] = useState(false)
   const [showAtlasComplete, setShowAtlasComplete] = useState(false)
+  const [mapMode, setMapMode] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showAtlasModal, setShowAtlasModal] = useState(false)
 
@@ -131,7 +132,7 @@ function App() {
         </div>
       )}
 
-      <header id="globeiq-header" style={{ position: 'relative', overflow: 'visible', marginTop: isDevMode ? 36 : 0 }}>
+      <header id="globeiq-header" style={{ position: 'relative', overflow: 'visible', marginTop: isDevMode ? 36 : 0, opacity: mapMode ? 0 : 1, pointerEvents: mapMode ? 'none' : 'auto', transition: 'opacity 0.3s ease' }}>
         <h1>🌍 GlobeIQ</h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <button className="help-button" onClick={() => setShowHowToPlay(true)} aria-label="How to play">?</button>
@@ -166,10 +167,17 @@ function App() {
         </div>
       </header>
 
-      <main className="game-area">
+      <main className={`game-area${mapMode ? ' map-mode-active' : ''}`}>
+
+        {/* Map peek back button */}
+        {mapMode && (
+          <button className="map-back-pill" onClick={() => setMapMode(false)}>
+            ← Back to Game
+          </button>
+        )}
 
         {/* Playing */}
-        {gameStatus === 'playing' && (
+        {!mapMode && gameStatus === 'playing' && (
           <>
             <DifficultyAura difficulty={currentCountry.difficulty} />
             <Silhouette
@@ -179,6 +187,9 @@ function App() {
               countryId={currentCountry.id}
               flagEmoji={currentCountry.flagEmoji}
             />
+            <button className="view-map-button" onClick={() => setMapMode(true)}>
+              🗺️ View Map
+            </button>
             <HintPanel guessCount={guessCount} country={currentCountry} />
             <GuessInput
               onGuess={makeGuess}
@@ -192,7 +203,7 @@ function App() {
         )}
 
         {/* Win or Loss — show reveal card */}
-        {(gameStatus === 'won' || gameStatus === 'lost') && !revealDismissed && (
+        {!mapMode && (gameStatus === 'won' || gameStatus === 'lost') && !revealDismissed && (
           <>
             <RevealCard
               country={currentCountry}
@@ -209,7 +220,7 @@ function App() {
         )}
 
         {/* Dismissed — show pill + all hints */}
-        {(gameStatus === 'won' || gameStatus === 'lost') && revealDismissed && (
+        {!mapMode && (gameStatus === 'won' || gameStatus === 'lost') && revealDismissed && (
           <>
             <button type="button" className="reveal-pill" onClick={() => setRevealDismissed(false)}>
               {gameStatus === 'won' ? '🎉 You got it! Tap to see result' : '😔 Tap to see card'}
