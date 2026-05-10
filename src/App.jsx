@@ -35,6 +35,7 @@ function App() {
     gameStatus,
     makeGuess,
     nextCountry,
+    skipCountry,
   } = useGameLogic(collectedCountries, atlasLoaded)
 
   const { switchMode } = usePuzzleMode()
@@ -199,6 +200,9 @@ function App() {
               previousGuesses={guesses}
               puzzleKey={currentCountry?.id}
             />
+            <button className="skip-button" onClick={skipCountry}>
+              Skip this country →
+            </button>
           </>
         )}
 

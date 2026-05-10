@@ -161,5 +161,11 @@ export default function useGameLogic(collectedCountries = [], atlasLoaded = fals
     setGameStatus('playing')
   }
 
-  return { currentCountry, guesses, guessCount, gameStatus, makeGuess, nextCountry }
+  function skipCountry() {
+    if (currentCountry) recordFail(currentCountry.id) // avoid immediate repeat
+    try { localStorage.removeItem(GAME_KEY) } catch {}
+    nextCountry()
+  }
+
+  return { currentCountry, guesses, guessCount, gameStatus, makeGuess, nextCountry, skipCountry }
 }

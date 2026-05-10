@@ -514,6 +514,26 @@ body {
   font-style: italic;
 }
 
+/* ===== Skip Button ===== */
+.skip-button {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: #555;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.skip-button:hover {
+  color: #888;
+}
+
 /* ===== Map View Mode ===== */
 .view-map-button {
   display: block;
