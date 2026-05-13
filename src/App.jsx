@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Route, Routes } from 'react-router-dom'
 import useGameLogic from './hooks/useGameLogic'
 import useAtlas from './hooks/useAtlas'
 import useAuth from './hooks/useAuth'
@@ -13,6 +14,7 @@ import HowToPlay from './components/HowToPlay'
 import AuthModal from './components/AuthModal'
 import AtlasModal from './components/AtlasModal'
 import AtlasComplete from './components/AtlasComplete'
+import CountryPage from './components/CountryPage'
 import { generateShareText } from './utils/shareCard'
 import { playCorrect, playWrong, playReveal } from './utils/sound'
 import countries from './data/countries'
@@ -115,15 +117,6 @@ function App() {
     }
   }
 
-  if (!currentCountry) {
-    return (
-      <div id="globeiq-app">
-        <WorldMap collectedCountries={collectedCountries} currentCountryId={null} allCountries={countries} />
-        Loading…
-      </div>
-    )
-  }
-
   return (
     <div id="globeiq-app">
       <WorldMap
@@ -187,72 +180,86 @@ function App() {
         </div>
       </header>
 
-      <main className={`game-area${mapMode ? ' map-mode-active' : ''}`}>
+      <Routes>
+        <Route path="/" element={
+          !currentCountry ? (
+            <main className="game-area">Loading…</main>
+          ) : (
+            <main className={`game-area${mapMode ? ' map-mode-active' : ''}`}>
 
-        {/* Map peek back button */}
-        {mapMode && (
-          <button className="map-back-pill" onClick={() => setMapMode(false)}>
-            ← Back to Game
-          </button>
-        )}
+              {/* Map peek back button */}
+              {mapMode && (
+                <button className="map-back-pill" onClick={() => setMapMode(false)}>
+                  ← Back to Game
+                </button>
+              )}
 
-        {/* Playing */}
-        {!mapMode && gameStatus === 'playing' && (
-          <>
-            <DifficultyAura difficulty={currentCountry.difficulty} />
-            <Silhouette
-              continent={currentCountry.continent}
-              revealed={false}
-              countryName={currentCountry.name}
-              countryId={currentCountry.id}
-              flagEmoji={currentCountry.flagEmoji}
-            />
-            <button className="view-map-button" onClick={() => setMapMode(true)}>
-              🗺️ View Map
-            </button>
-            <HintPanel guessCount={guessCount} country={currentCountry} />
-            <GuessInput
-              onGuess={makeGuess}
-              disabled={false}
-              countries={countries}
-              countryNames={countryNames}
-              previousGuesses={guesses}
-              puzzleKey={currentCountry?.id}
-            />
-            <button className="skip-button" onClick={skipCountry}>
-              Skip this country →
-            </button>
-          </>
-        )}
+              {/* Playing */}
+              {!mapMode && gameStatus === 'playing' && (
+                <>
+                  <DifficultyAura difficulty={currentCountry.difficulty} />
+                  <Silhouette
+                    continent={currentCountry.continent}
+                    revealed={false}
+                    countryName={currentCountry.name}
+                    countryId={currentCountry.id}
+                    flagEmoji={currentCountry.flagEmoji}
+                  />
+                  <button className="view-map-button" onClick={() => setMapMode(true)}>
+                    🗺️ View Map
+                  </button>
+                  <HintPanel guessCount={guessCount} country={currentCountry} />
+                  <GuessInput
+                    onGuess={makeGuess}
+                    disabled={false}
+                    countries={countries}
+                    countryNames={countryNames}
+                    previousGuesses={guesses}
+                    puzzleKey={currentCountry?.id}
+                  />
+                  <button className="skip-button" onClick={skipCountry}>
+                    Skip this country →
+                  </button>
+                </>
+              )}
 
-        {/* Win or Loss — show reveal card */}
-        {!mapMode && (gameStatus === 'won' || gameStatus === 'lost') && !revealDismissed && (
-          <>
-            <RevealCard
-              country={currentCountry}
-              won={gameStatus === 'won'}
-              onNext={handleNext}
-              onDismiss={() => setRevealDismissed(true)}
-            />
-            {gameStatus === 'won' && (
-              <button className="share-button" onClick={handleShare}>
-                📋 Share Result
-              </button>
-            )}
-          </>
-        )}
+              {/* Win or Loss — show reveal card */}
+              {!mapMode && (gameStatus === 'won' || gameStatus === 'lost') && !revealDismissed && (
+                <>
+                  <RevealCard
+                    country={currentCountry}
+                    won={gameStatus === 'won'}
+                    onNext={handleNext}
+                    onDismiss={() => setRevealDismissed(true)}
+                  />
+                  {gameStatus === 'won' && (
+                    <button className="share-button" onClick={handleShare}>
+                      📋 Share Result
+                    </button>
+                  )}
+                </>
+              )}
 
-        {/* Dismissed — show pill + all hints */}
-        {!mapMode && (gameStatus === 'won' || gameStatus === 'lost') && revealDismissed && (
-          <>
-            <button type="button" className="reveal-pill" onClick={() => setRevealDismissed(false)}>
-              {gameStatus === 'won' ? '🎉 You got it! Tap to see result' : '😔 Tap to see card'}
-            </button>
-            <HintPanel guessCount={6} country={currentCountry} />
-          </>
-        )}
+              {/* Dismissed — show pill + all hints */}
+              {!mapMode && (gameStatus === 'won' || gameStatus === 'lost') && revealDismissed && (
+                <>
+                  <button type="button" className="reveal-pill" onClick={() => setRevealDismissed(false)}>
+                    {gameStatus === 'won' ? '🎉 You got it! Tap to see result' : '😔 Tap to see card'}
+                  </button>
+                  <HintPanel guessCount={6} country={currentCountry} />
+                </>
+              )}
 
-      </main>
+            </main>
+          )
+        } />
+        <Route path="/countries/:slug" element={
+          <CountryPage
+            allCountries={countries}
+            collectedCountries={collectedCountries}
+          />
+        } />
+      </Routes>
 
       {showHowToPlay && <HowToPlay onClose={closeHowToPlay} />}
       {showAuthModal && (

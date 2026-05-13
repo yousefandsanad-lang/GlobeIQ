@@ -1,5 +1,7 @@
 import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { useNavigate } from 'react-router-dom'
+import { slugify } from '../utils/slug'
 
 function flagEmojiToIso2(emoji) {
   try {
@@ -50,11 +52,18 @@ const MOBILE_STYLE = `
 `
 
 export default function AtlasModal({ collectedCountries, onClose, allCountries }) {
+  const navigate = useNavigate()
+
   useEffect(() => {
     function onKey(e) { if (e.key === 'Escape') onClose() }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
+
+  function openCountry(country) {
+    onClose()
+    navigate(`/countries/${slugify(country.name)}`)
+  }
 
   const collectedSet = new Set(collectedCountries.map(String))
 
@@ -193,21 +202,23 @@ export default function AtlasModal({ collectedCountries, onClose, allCountries }
                   >
                     {countries.map(c => {
                       const isCollected = collectedSet.has(String(c.id))
-                      return (
-                        <div
-                          key={c.id}
-                          style={{
-                            background: isCollected ? '#ffffff10' : '#ffffff05',
-                            border: `1px solid ${isCollected ? '#ffffff20' : '#ffffff08'}`,
-                            borderRadius: 8,
-                            padding: '10px 12px',
-                            minHeight: 44,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 8,
-                            boxSizing: 'border-box',
-                          }}
-                        >
+                      const commonStyle = {
+                        background: isCollected ? '#ffffff10' : '#ffffff05',
+                        border: `1px solid ${isCollected ? '#ffffff20' : '#ffffff08'}`,
+                        borderRadius: 8,
+                        padding: '10px 12px',
+                        minHeight: 44,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        boxSizing: 'border-box',
+                        textAlign: 'left',
+                        width: '100%',
+                        font: 'inherit',
+                        color: 'inherit',
+                      }
+                      const inner = (
+                        <>
                           {isCollected
                             ? <FlagImage emoji={c.flagEmoji} size={16} />
                             : <span style={{ fontSize: 16, lineHeight: 1, flexShrink: 0 }}>🔒</span>
@@ -225,6 +236,26 @@ export default function AtlasModal({ collectedCountries, onClose, allCountries }
                           >
                             {isCollected ? c.name : '????????'}
                           </span>
+                        </>
+                      )
+
+                      if (isCollected) {
+                        return (
+                          <button
+                            key={c.id}
+                            type="button"
+                            onClick={() => openCountry(c)}
+                            aria-label={`Open ${c.name} trophy page`}
+                            style={{ ...commonStyle, cursor: 'pointer' }}
+                          >
+                            {inner}
+                          </button>
+                        )
+                      }
+
+                      return (
+                        <div key={c.id} style={commonStyle}>
+                          {inner}
                         </div>
                       )
                     })}
