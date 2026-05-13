@@ -1,8 +1,11 @@
-import { useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 import Silhouette from './Silhouette'
 import { getContinentTheme } from '../utils/continentTheme'
 import { findCountryBySlug, slugify } from '../utils/slug'
+
+const SITE_URL = 'https://globeiq.app'
 
 export default function CountryPage({ allCountries, collectedCountries }) {
   const { slug } = useParams()
@@ -26,19 +29,13 @@ export default function CountryPage({ allCountries, collectedCountries }) {
   const prev = index > 0 ? sortedCountries[index - 1] : null
   const next = index >= 0 && index < sortedCountries.length - 1 ? sortedCountries[index + 1] : null
 
-  useEffect(() => {
-    if (!country) {
-      document.title = 'Not found — GlobeIQ'
-      return
-    }
-    document.title = collected
-      ? `${country.name} — GlobeIQ`
-      : `🔒 Locked — GlobeIQ`
-  }, [country, collected])
-
   if (!country) {
     return (
       <main className="country-page country-not-found">
+        <Helmet>
+          <title>Country not found — GlobeIQ</title>
+          <meta name="robots" content="noindex" />
+        </Helmet>
         <button className="country-back" onClick={() => navigate('/')}>← Back to game</button>
         <h1 className="country-name">Country not found</h1>
         <p className="country-locked-message">
@@ -49,27 +46,57 @@ export default function CountryPage({ allCountries, collectedCountries }) {
     )
   }
 
-  if (!collected) {
-    return (
-      <main className="country-page country-locked">
-        <button className="country-back" onClick={() => navigate(-1)}>← Back</button>
-        <div className="country-flag-row">
-          <div className="country-flag-locked">🔒</div>
-          <h1 className="country-name">????????</h1>
-          <div className="country-meta">Locked</div>
-        </div>
-        <p className="country-locked-message">
-          Solve today's puzzle to unlock more countries. Come back daily to grow your atlas.
-        </p>
-        <Link to="/" className="country-cta">Play today's puzzle →</Link>
-      </main>
-    )
+  const theme = getContinentTheme(country.continent)
+  const canonical = `${SITE_URL}/countries/${slugify(country.name)}`
+  const title = `${country.name} — Flag, Capital, Region & Facts | GlobeIQ`
+  const description = `${country.name}: capital ${country.capital}, in ${country.continent} (${country.region}). ${country.knownFor}. Play GlobeIQ to collect all 195 countries.`
+  const ogDescription = `${country.knownFor}. Capital: ${country.capital}.`
+
+  const placeSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Place',
+    name: country.name,
+    description: country.knownFor,
+    address: {
+      '@type': 'PostalAddress',
+      addressCountry: country.name,
+      addressRegion: country.region,
+    },
+    containedInPlace: {
+      '@type': 'Place',
+      name: country.continent,
+    },
   }
 
-  const theme = getContinentTheme(country.continent)
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'GlobeIQ', item: SITE_URL },
+      { '@type': 'ListItem', position: 2, name: country.continent },
+      { '@type': 'ListItem', position: 3, name: country.name, item: canonical },
+    ],
+  }
 
   return (
     <main className="country-page" style={{ '--country-accent': theme.primary }}>
+      <Helmet>
+        <title>{title}</title>
+        <meta name="description" content={description} />
+        <link rel="canonical" href={canonical} />
+        <meta property="og:type" content="article" />
+        <meta property="og:title" content={`${country.name} — GlobeIQ`} />
+        <meta property="og:description" content={ogDescription} />
+        <meta property="og:url" content={canonical} />
+        <meta property="og:image" content={`${SITE_URL}/preview.png`} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`${country.name} — GlobeIQ`} />
+        <meta name="twitter:description" content={ogDescription} />
+        <meta name="twitter:image" content={`${SITE_URL}/preview.png`} />
+        <script type="application/ld+json">{JSON.stringify(placeSchema)}</script>
+        <script type="application/ld+json">{JSON.stringify(breadcrumbSchema)}</script>
+      </Helmet>
+
       <button className="country-back" onClick={() => navigate(-1)}>← Back</button>
 
       <div className="country-flag-row">
@@ -77,6 +104,9 @@ export default function CountryPage({ allCountries, collectedCountries }) {
         <h1 className="country-name">{country.name}</h1>
         <div className="country-meta">
           {country.continent} · {country.population}
+        </div>
+        <div className={`country-collected-badge ${collected ? 'is-collected' : 'is-uncollected'}`}>
+          {collected ? '✅ Collected' : '🔒 Not yet collected'}
         </div>
       </div>
 
@@ -105,20 +135,18 @@ export default function CountryPage({ allCountries, collectedCountries }) {
         </div>
       )}
 
+      <Link to="/" className="country-cta">Play today's puzzle →</Link>
+
       <nav className="country-nav" aria-label="Adjacent countries">
         {prev ? (
           <Link to={`/countries/${slugify(prev.name)}`} className="country-nav-link country-nav-prev">
             <span className="country-nav-arrow">◀</span>
-            <span className="country-nav-label">
-              {collectedSet.has(String(prev.id)) ? prev.name : '🔒'}
-            </span>
+            <span className="country-nav-label">{prev.name}</span>
           </Link>
         ) : <span />}
         {next ? (
           <Link to={`/countries/${slugify(next.name)}`} className="country-nav-link country-nav-next">
-            <span className="country-nav-label">
-              {collectedSet.has(String(next.id)) ? next.name : '🔒'}
-            </span>
+            <span className="country-nav-label">{next.name}</span>
             <span className="country-nav-arrow">▶</span>
           </Link>
         ) : <span />}
