@@ -8,6 +8,29 @@ body {
   min-height: 100vh;
 }
 
+/* Keyboard focus — visible 2px ring on all interactive elements.
+   Uses :focus-visible so mouse clicks don't paint the ring. */
+button:focus-visible,
+input:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid #4A90D9;
+  outline-offset: 2px;
+}
+
+/* Honour the OS-level "reduce motion" preference: kill pulses, fades,
+   shakes, confetti, and the spinning Micro-Nation globe. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 #globeiq-app {
   max-width: 480px;
   margin: 0 auto;
@@ -32,16 +55,17 @@ body {
   background: #ffffff10;
   border: 1px solid #ffffff20;
   color: #fff;
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
+  font-family: inherit;
 }
 
 #globeiq-header h1 {
@@ -63,6 +87,8 @@ body {
   font-size: 13px;
   font-weight: 600;
   color: white;
+  font-family: inherit;
+  line-height: 1.2;
 }
 
 #globeiq-header .streak-badge {
@@ -71,6 +97,7 @@ body {
 
 #globeiq-header .atlas-badge {
   box-shadow: 0 0 8px #4A90D940;
+  cursor: pointer;
 }
 
 /* ===== Game area ===== */
