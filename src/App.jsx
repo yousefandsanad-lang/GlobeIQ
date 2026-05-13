@@ -3,6 +3,7 @@ import useGameLogic from './hooks/useGameLogic'
 import useAtlas from './hooks/useAtlas'
 import usePuzzleMode from './hooks/usePuzzleMode'
 import useAuth from './hooks/useAuth'
+import useStreak from './hooks/useStreak'
 import Silhouette from './components/Silhouette'
 import DifficultyAura from './components/DifficultyAura'
 import HintPanel from './components/HintPanel'
@@ -39,6 +40,7 @@ function App() {
   } = useGameLogic(collectedCountries, atlasLoaded)
 
   const { switchMode } = usePuzzleMode()
+  const { currentStreak, recordWin, recordLoss } = useStreak(user)
 
   const [revealDismissed, setRevealDismissed] = useState(false)
   const [showAtlasComplete, setShowAtlasComplete] = useState(false)
@@ -62,7 +64,12 @@ function App() {
 
   useEffect(() => {
     if (!currentCountry) return
-    if (gameStatus === 'won') addToAtlas(currentCountry.id)
+    if (gameStatus === 'won') {
+      addToAtlas(currentCountry.id)
+      recordWin()
+    } else if (gameStatus === 'lost') {
+      recordLoss()
+    }
   }, [gameStatus, currentCountry])
 
   // Show completion screen when atlas hits 195
@@ -137,6 +144,7 @@ function App() {
         <h1>🌍 GlobeIQ</h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <button className="help-button" onClick={() => setShowHowToPlay(true)} aria-label="How to play">?</button>
+          <span className="streak-badge" title="Current win streak">🔥 {currentStreak}</span>
           <div
             className="atlas-badge"
             onClick={() => setShowAtlasModal(true)}

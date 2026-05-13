@@ -1,6 +1,17 @@
+let _ctx = null
+function getCtx() {
+  if (_ctx) return _ctx
+  const AC = window.AudioContext || window.webkitAudioContext
+  if (!AC) return null
+  _ctx = new AC()
+  return _ctx
+}
+
 function playTones(frequencies, duration, gain) {
   try {
-    const ctx = new AudioContext()
+    const ctx = getCtx()
+    if (!ctx) return
+    if (ctx.state === 'suspended') ctx.resume()
     frequencies.forEach((freq, i) => {
       const osc = ctx.createOscillator()
       const gainNode = ctx.createGain()
