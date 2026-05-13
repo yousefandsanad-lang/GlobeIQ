@@ -69,7 +69,7 @@ Dev mode: https://globe-iq-one.vercel.app?dev
 ### Entry / root
 
 - **`src/main.jsx`** — Vite entry. Mounts `<App />` in `#root`.
-- **`src/App.jsx`** — Root component. Hook order: `useAuth` first, then `useAtlas(user)`, `useGameLogic(collectedCountries, devDateKey)`, `useStreak(user)`, `usePuzzleMode`. Dev mode detected via `URLSearchParams`. `devOffset` state drives `devDateKey`. Sound effects via two `useEffect`s. Renders `WorldMap`, header, dev toolbar, game area, modals.
+- **`src/App.jsx`** — Root component. Hook order: `useAuth` first, then `useAtlas(user)`, `useGameLogic(collectedCountries, devDateKey)`, `useStreak(user)`. Dev mode detected via `URLSearchParams`. `devOffset` state drives `devDateKey`. Sound effects via two `useEffect`s. Renders `WorldMap`, header, dev toolbar, game area, modals.
 - **`src/index.css`** — minimal CSS reset.
 - **`src/styles/main.css`** — all GlobeIQ component styling.
 
@@ -89,7 +89,6 @@ Dev mode: https://globe-iq-one.vercel.app?dev
 - **`useAtlas(user)`** — collected country IDs. On mount: merges localStorage + cloud if logged in.
 - **`useStreak(user)`** — streak tracking. `recordWin`/`recordLoss` sync to cloud.
 - **`useAuth()`** — `user`, `loading`, `signInWithGoogle`, `signInWithMagicLink`, `signOut`.
-- **`usePuzzleMode()`** — daily vs bonus mode stub.
 
 ### Components (`src/components/`)
 
@@ -102,7 +101,6 @@ Dev mode: https://globe-iq-one.vercel.app?dev
 - **`HowToPlay.jsx`** — compact modal. Hint order: Climate → Borders → Region → Known For → Capital → Flag.
 - **`AuthModal.jsx`** — Google + magic link. React Portal. z-index 99999.
 - **`AtlasModal.jsx`** — Pokédex atlas. Grouped by continent. Flag images from `flagcdn.com`. Sticky headers. 44px tap targets. Mobile: single column under 400px. React Portal.
-- **`StreakMap.jsx`** — exists but not rendered. Can be deleted.
 
 ---
 
@@ -142,12 +140,11 @@ URL: `https://globe-iq-one.vercel.app?dev`
 | `globeiq_recent` | `useGameLogic` | `string[]` (max 5 IDs) |
 | `globeiq_atlas` | `useAtlas` | `string[]` ISO IDs |
 | `globeiq_streak` | `useStreak` | `{ currentStreak, bestStreak, lastPlayedDate }` |
-| `globeiq_mode` | `usePuzzleMode` | `{ mode, bonusPlaysToday, date }` |
 | `globeiq_visited` | `App.jsx` | `"true"` |
 
 **Reset everything (browser console):**
 ```js
-;['globeiq_daily_country','globeiq_atlas','globeiq_streak','globeiq_mode','globeiq_visited','globeiq_recent']
+;['globeiq_daily_country','globeiq_atlas','globeiq_streak','globeiq_visited','globeiq_recent']
   .forEach(k => localStorage.removeItem(k))
 location.reload()
 ```
@@ -178,9 +175,7 @@ Note: if logged in, Supabase re-syncs atlas on reload. Sign out first to fully r
 
 ## Known issues / TODOs
 
-1. **`unlockBonus()`** — stub in `usePuzzleMode`, not wired to anything.
-2. **`Silhouette.revealed`** — always `false` from App.jsx (intentional during play).
-3. **`StreakMap.jsx`** — still exists, never rendered, can be deleted.
+1. **`Silhouette.revealed`** — always `false` from App.jsx (intentional during play).
 
 ---
 

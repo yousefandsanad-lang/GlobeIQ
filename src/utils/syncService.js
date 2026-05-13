@@ -1,12 +1,16 @@
 import supabase from './supabase'
 
+function logFailure(label, err) {
+  if (import.meta.env.DEV) console.warn(`[syncService] ${label} failed:`, err)
+}
+
 export async function createPlayerIfNotExists(userId) {
   try {
     await supabase
       .from('players')
       .upsert({ id: userId }, { onConflict: 'id', ignoreDuplicates: true })
-  } catch {
-    // ignore
+  } catch (err) {
+    logFailure('createPlayerIfNotExists', err)
   }
 }
 
@@ -20,8 +24,8 @@ export async function syncAtlasToCloud(userId, collectedCountries) {
     await supabase
       .from('atlas')
       .upsert(rows, { onConflict: 'player_id,country_id' })
-  } catch {
-    // ignore — local state is source of truth
+  } catch (err) {
+    logFailure('syncAtlasToCloud', err)
   }
 }
 
@@ -31,9 +35,13 @@ export async function loadAtlasFromCloud(userId) {
       .from('atlas')
       .select('country_id')
       .eq('player_id', userId)
-    if (error || !data) return []
-    return data.map(row => row.country_id)
-  } catch {
+    if (error) {
+      logFailure('loadAtlasFromCloud', error)
+      return []
+    }
+    return data ? data.map(row => row.country_id) : []
+  } catch (err) {
+    logFailure('loadAtlasFromCloud', err)
     return []
   }
 }
@@ -46,8 +54,8 @@ export async function syncStreakToCloud(userId, currentStreak, bestStreak, lastP
         { player_id: userId, current_streak: currentStreak, best_streak: bestStreak, last_played_date: lastPlayedDate },
         { onConflict: 'player_id' }
       )
-  } catch {
-    // ignore
+  } catch (err) {
+    logFailure('syncStreakToCloud', err)
   }
 }
 
@@ -58,13 +66,18 @@ export async function loadStreakFromCloud(userId) {
       .select('current_streak, best_streak, last_played_date')
       .eq('player_id', userId)
       .single()
-    if (error || !data) return null
+    if (error) {
+      logFailure('loadStreakFromCloud', error)
+      return null
+    }
+    if (!data) return null
     return {
       currentStreak: data.current_streak ?? 0,
       bestStreak: data.best_streak ?? 0,
       lastPlayedDate: data.last_played_date ?? null,
     }
-  } catch {
+  } catch (err) {
+    logFailure('loadStreakFromCloud', err)
     return null
   }
 }
