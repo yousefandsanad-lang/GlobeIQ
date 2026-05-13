@@ -136,7 +136,7 @@ export default function useGameLogic(collectedCountries = [], atlasLoaded = fals
 
     if (isCorrect) {
       setGameStatus('won')
-      if (typeof gtag !== 'undefined') {
+      if (typeof gtag === 'function') {
         gtag('event', 'game_won', {
           guesses_taken: newCount,
           country: currentCountry.name,
@@ -145,7 +145,7 @@ export default function useGameLogic(collectedCountries = [], atlasLoaded = fals
     } else if (newCount >= MAX_GUESSES) {
       recordFail(currentCountry.id)
       setGameStatus('lost')
-      if (typeof gtag !== 'undefined') {
+      if (typeof gtag === 'function') {
         gtag('event', 'game_lost', {
           country: currentCountry.name,
         })
