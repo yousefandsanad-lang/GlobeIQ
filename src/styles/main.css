@@ -810,27 +810,6 @@ a:focus-visible,
   font-weight: 700;
 }
 
-.country-collected-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 10px;
-  padding: 5px 12px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-  border: 1px solid #ffffff20;
-  background: #ffffff08;
-  color: #ccc;
-}
-
-.country-collected-badge.is-collected {
-  border-color: #4ade8050;
-  background: #4ade8015;
-  color: #86efac;
-}
-
 .country-silhouette {
   display: flex;
   justify-content: center;

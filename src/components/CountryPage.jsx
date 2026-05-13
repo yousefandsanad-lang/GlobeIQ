@@ -48,6 +48,64 @@ export default function CountryPage({ allCountries, collectedCountries }) {
 
   const theme = getContinentTheme(country.continent)
   const canonical = `${SITE_URL}/countries/${slugify(country.name)}`
+
+  const prevSlug = prev ? slugify(prev.name) : null
+  const nextSlug = next ? slugify(next.name) : null
+  const prevCollected = prev ? collectedSet.has(String(prev.id)) : false
+  const nextCollected = next ? collectedSet.has(String(next.id)) : false
+
+  const nav = (
+    <nav className="country-nav" aria-label="Adjacent countries">
+      {prev ? (
+        <Link
+          to={`/countries/${prevSlug}`}
+          className="country-nav-link country-nav-prev"
+          aria-label={prevCollected ? `Previous: ${prev.name}` : 'Previous country (locked)'}
+        >
+          <span className="country-nav-arrow">◀</span>
+          <span className="country-nav-label">
+            {prevCollected ? prev.name : '🔒'}
+          </span>
+        </Link>
+      ) : <span />}
+      {next ? (
+        <Link
+          to={`/countries/${nextSlug}`}
+          className="country-nav-link country-nav-next"
+          aria-label={nextCollected ? `Next: ${next.name}` : 'Next country (locked)'}
+        >
+          <span className="country-nav-label">
+            {nextCollected ? next.name : '🔒'}
+          </span>
+          <span className="country-nav-arrow">▶</span>
+        </Link>
+      ) : <span />}
+    </nav>
+  )
+
+  if (!collected) {
+    return (
+      <main className="country-page country-locked">
+        <Helmet>
+          <title>🔒 Locked — GlobeIQ</title>
+          <meta name="description" content="Solve today's GlobeIQ puzzle to unlock more countries in your atlas." />
+          <meta name="robots" content="noindex" />
+        </Helmet>
+        <button className="country-back" onClick={() => navigate(-1)}>← Back</button>
+        <div className="country-flag-row">
+          <div className="country-flag-locked">🔒</div>
+          <h1 className="country-name">????????</h1>
+          <div className="country-meta">Locked</div>
+        </div>
+        <p className="country-locked-message">
+          Solve today's puzzle to unlock more countries. Come back daily to grow your atlas.
+        </p>
+        <Link to="/" className="country-cta">Play today's puzzle →</Link>
+        {nav}
+      </main>
+    )
+  }
+
   const title = `${country.name} — Flag, Capital, Region & Facts | GlobeIQ`
   const description = `${country.name}: capital ${country.capital}, in ${country.continent} (${country.region}). ${country.knownFor}. Play GlobeIQ to collect all 195 countries.`
   const ogDescription = `${country.knownFor}. Capital: ${country.capital}.`
@@ -105,9 +163,6 @@ export default function CountryPage({ allCountries, collectedCountries }) {
         <div className="country-meta">
           {country.continent} · {country.population}
         </div>
-        <div className={`country-collected-badge ${collected ? 'is-collected' : 'is-uncollected'}`}>
-          {collected ? '✅ Collected' : '🔒 Not yet collected'}
-        </div>
       </div>
 
       <div className="country-silhouette">
@@ -135,22 +190,7 @@ export default function CountryPage({ allCountries, collectedCountries }) {
         </div>
       )}
 
-      <Link to="/" className="country-cta">Play today's puzzle →</Link>
-
-      <nav className="country-nav" aria-label="Adjacent countries">
-        {prev ? (
-          <Link to={`/countries/${slugify(prev.name)}`} className="country-nav-link country-nav-prev">
-            <span className="country-nav-arrow">◀</span>
-            <span className="country-nav-label">{prev.name}</span>
-          </Link>
-        ) : <span />}
-        {next ? (
-          <Link to={`/countries/${slugify(next.name)}`} className="country-nav-link country-nav-next">
-            <span className="country-nav-label">{next.name}</span>
-            <span className="country-nav-arrow">▶</span>
-          </Link>
-        ) : <span />}
-      </nav>
+      {nav}
     </main>
   )
 }
