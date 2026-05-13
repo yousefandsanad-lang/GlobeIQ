@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import useGameLogic from './hooks/useGameLogic'
 import useAtlas from './hooks/useAtlas'
-import usePuzzleMode from './hooks/usePuzzleMode'
 import useAuth from './hooks/useAuth'
 import useStreak from './hooks/useStreak'
 import Silhouette from './components/Silhouette'
@@ -39,7 +38,6 @@ function App() {
     skipCountry,
   } = useGameLogic(collectedCountries, atlasLoaded)
 
-  const { switchMode } = usePuzzleMode()
   const { currentStreak, recordWin, recordLoss } = useStreak(user)
 
   const [revealDismissed, setRevealDismissed] = useState(false)
@@ -95,7 +93,6 @@ function App() {
 
   function handleNext() {
     nextCountry()
-    switchMode('daily')
   }
 
   async function handleShare() {
