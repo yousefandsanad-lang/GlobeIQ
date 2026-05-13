@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Route, Routes } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 import useGameLogic from './hooks/useGameLogic'
 import useAtlas from './hooks/useAtlas'
 import useAuth from './hooks/useAuth'
@@ -182,10 +183,19 @@ function App() {
 
       <Routes>
         <Route path="/" element={
-          !currentCountry ? (
-            <main className="game-area">Loading…</main>
-          ) : (
-            <main className={`game-area${mapMode ? ' map-mode-active' : ''}`}>
+          <>
+            <Helmet>
+              <title>GlobeIQ — Geography Guessing Game</title>
+              <meta name="description" content="Guess the mystery country from 6 progressive hints — silhouette, climate, borders, region, capital, and flag. Collect all 195 countries in your personal world atlas. Free to play." />
+              <link rel="canonical" href="https://globeiq.app/" />
+              <meta property="og:url" content="https://globeiq.app/" />
+              <meta property="og:title" content="GlobeIQ — Geography Guessing Game" />
+              <meta property="og:description" content="Guess the mystery country from 6 hints. Collect all 195 countries in your world atlas. Free to play." />
+            </Helmet>
+            {!currentCountry ? (
+              <main className="game-area">Loading…</main>
+            ) : (
+              <main className={`game-area${mapMode ? ' map-mode-active' : ''}`}>
 
               {/* Map peek back button */}
               {mapMode && (
@@ -251,7 +261,8 @@ function App() {
               )}
 
             </main>
-          )
+            )}
+          </>
         } />
         <Route path="/countries/:slug" element={
           <CountryPage
