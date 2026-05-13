@@ -1,3 +1,5 @@
+import { useEffect } from 'react'
+
 const hintRows = [
   { n: 1, icon: '🌡️', text: 'Climate & Terrain' },
   { n: 2, icon: '🗺️', text: 'Borders' },
@@ -28,9 +30,18 @@ const hintRowStyle = {
 }
 
 export default function HowToPlay({ onClose }) {
+  useEffect(() => {
+    function onKey(e) { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+
   return (
     <div
       onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label="How to play"
       style={{
         position: 'fixed',
         inset: 0,

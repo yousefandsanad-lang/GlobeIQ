@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 
 const GoogleG = () => (
@@ -15,6 +15,12 @@ export default function AuthModal({ onClose, signInWithGoogle, signInWithMagicLi
   const [sent, setSent] = useState(false)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    function onKey(e) { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
 
   async function handleMagicLink(e) {
     e.preventDefault()
@@ -34,6 +40,9 @@ export default function AuthModal({ onClose, signInWithGoogle, signInWithMagicLi
   return createPortal(
     <div
       onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Sign in to GlobeIQ"
       style={{
         position: 'fixed',
         inset: 0,
@@ -62,6 +71,7 @@ export default function AuthModal({ onClose, signInWithGoogle, signInWithMagicLi
         {/* Close */}
         <button
           onClick={onClose}
+          aria-label="Close sign-in dialog"
           style={{
             position: 'absolute',
             top: 16,

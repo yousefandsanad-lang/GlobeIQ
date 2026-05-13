@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
 
 function flagEmojiToIso2(emoji) {
@@ -49,6 +50,12 @@ const MOBILE_STYLE = `
 `
 
 export default function AtlasModal({ collectedCountries, onClose, allCountries }) {
+  useEffect(() => {
+    function onKey(e) { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+
   const collectedSet = new Set(collectedCountries.map(String))
 
   const byContinent = {}
@@ -69,6 +76,9 @@ export default function AtlasModal({ collectedCountries, onClose, allCountries }
       <style>{MOBILE_STYLE}</style>
       <div
         onClick={onClose}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Your atlas"
         style={{
           position: 'fixed',
           inset: 0,

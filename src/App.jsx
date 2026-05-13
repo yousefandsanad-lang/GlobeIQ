@@ -98,11 +98,24 @@ function App() {
     switchMode('daily')
   }
 
-  function handleShare() {
+  async function handleShare() {
     if (!currentCountry || gameStatus !== 'won') return
     const text = generateShareText(currentCountry, guesses, true)
     if (!text) return
-    navigator.clipboard.writeText(text).then(() => alert('Copied to clipboard!'))
+    if (navigator.share) {
+      try {
+        await navigator.share({ text })
+        return
+      } catch (err) {
+        if (err.name === 'AbortError') return
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(text)
+      alert('Copied to clipboard!')
+    } catch {
+      alert('Could not copy. Try selecting the text manually.')
+    }
   }
 
   if (!currentCountry) {
@@ -145,11 +158,12 @@ function App() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <button className="help-button" onClick={() => setShowHowToPlay(true)} aria-label="How to play">?</button>
           <span className="streak-badge" title="Current win streak">🔥 {currentStreak}</span>
-          <div
+          <button
+            type="button"
             className="atlas-badge"
             onClick={() => setShowAtlasModal(true)}
-            style={{ cursor: 'pointer' }}
-          >🗺️ {collectedCountries.length}/195</div>
+            aria-label={`View atlas — ${collectedCountries.length} of 195 countries collected`}
+          >🗺️ {collectedCountries.length}/195</button>
           <a
             href="https://buymeacoffee.com/globeiq"
             target="_blank"
