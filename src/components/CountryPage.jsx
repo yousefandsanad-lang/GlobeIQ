@@ -73,8 +73,7 @@ export default function CountryPage({ allCountries, collectedCountries }) {
     '@type': 'BreadcrumbList',
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'GlobeIQ', item: SITE_URL },
-      { '@type': 'ListItem', position: 2, name: country.continent },
-      { '@type': 'ListItem', position: 3, name: country.name, item: canonical },
+      { '@type': 'ListItem', position: 2, name: country.name, item: canonical },
     ],
   }
 
