@@ -173,6 +173,31 @@ Note: if logged in, Supabase re-syncs atlas on reload. Sign out first to fully r
 
 ---
 
+## GSC indexing — pending manual requests
+
+Property: `https://globeiq.app` (Domain property). Sitemap submitted, status Success.
+
+GSC caps "Request indexing" at ~10 URLs/day. Done so far (2026-05-13): Japan, USA, China.
+
+Submit one per day until cleared. Paste URL into URL Inspection → Test live URL → Request indexing.
+
+- [ ] `https://globeiq.app/` (homepage)
+- [ ] `https://globeiq.app/countries/india`
+- [ ] `https://globeiq.app/countries/germany`
+- [ ] `https://globeiq.app/countries/france`
+- [ ] `https://globeiq.app/countries/united-kingdom`
+- [ ] `https://globeiq.app/countries/brazil`
+- [ ] `https://globeiq.app/countries/mexico`
+- [ ] `https://globeiq.app/countries/italy`
+- [ ] `https://globeiq.app/countries/spain`
+- [ ] `https://globeiq.app/countries/russia`
+- [ ] `https://globeiq.app/countries/canada`
+- [ ] `https://globeiq.app/countries/australia`
+
+After this short list, leave the remaining ~180 to Google's sitemap-driven crawl — no need to manually request all 195.
+
+---
+
 ## Known issues / TODOs
 
 1. **`Silhouette.revealed`** — always `false` from App.jsx (intentional during play).
