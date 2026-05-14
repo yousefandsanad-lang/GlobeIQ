@@ -18,7 +18,7 @@ Dev mode: https://globe-iq-one.vercel.app?dev
 
 ---
 
-## Current status (as of 2026-05-04)
+## Current status (as of 2026-05-14)
 
 ### Completed
 
@@ -55,6 +55,13 @@ Dev mode: https://globe-iq-one.vercel.app?dev
 - **Hints revealed on review**: when win/loss card is minimised, all 6 hints shown (`guessCount=6`)
 - **Flag hint row height**: `.hint-row` uses `display:flex; align-items:center` so 32px flag emoji doesn't inflate row height
 - **Dev mode**: `?dev` URL param enables orange toolbar with country name, offset counter, "Next Puzzle →" and "Reset" buttons. Bypasses already-collected wall and localStorage restore. No effect for regular players.
+- **Custom domain live**: `https://globeiq.app` (canonical). `https://globe-iq-one.vercel.app` still works.
+- **ads.txt** in `public/` for AdSense approval.
+- **Per-country trophy pages** at `/countries/<slug>` — 195 routes. Public landing pages (anyone can view) showing flag, name, silhouette, capital, climate, borders, region, known-for, fun fact. Prev/next nav cycles alphabetically through all 195. Atlas modal still gates uncollected names with 🔒 — that's where the trophy reveal lives. Small "✅ Collected" / "🔒 Not yet collected" badge on the page itself.
+- **SEO per-route meta tags** via `react-helmet-async`. Country pages set unique `<title>`, description, canonical, `og:*`, `twitter:*`. Homepage `<Helmet>` mirrors the index.html defaults so SPA navigation back to `/` keeps the right tags. `index.html` no longer hardcodes canonical/og:url/twitter:url (those caused "Alternate page with proper canonical tag" exclusions for non-home routes).
+- **JSON-LD per country page**: `Place` schema (name, knownFor, address, containedInPlace) + 2-step `BreadcrumbList` (GlobeIQ → Country). The continent breadcrumb step was removed because it had no `item` URL and GSC flagged it.
+- **Sitemap** (`public/sitemap.xml`) — 197 URLs: `/`, `/privacy.html`, and all 195 country pages.
+- **GSC**: Domain property `https://globeiq.app` added and verified. Sitemap submitted, status Success. Indexing requested for Japan, USA, China (2026-05-13).
 
 ### Header
 - 🌍 GlobeIQ logo left
@@ -82,6 +89,7 @@ Dev mode: https://globe-iq-one.vercel.app?dev
 - **`src/utils/supabase.js`** — Supabase client singleton.
 - **`src/utils/syncService.js`** — atlas + streak cloud sync. All try/catch, fail silently.
 - **`src/utils/sound.js`** — Web Audio API: `playCorrect`, `playWrong`, `playReveal`, `playStreak`.
+- **`src/utils/slug.js`** — `slugify(name)` and `findCountryBySlug(countries, slug)` for the `/countries/<slug>` routes. Strips diacritics and apostrophes (e.g. `"Côte d'Ivoire"` → `"cote-divoire"`).
 
 ### Hooks (`src/hooks/`)
 
@@ -100,7 +108,10 @@ Dev mode: https://globe-iq-one.vercel.app?dev
 - **`RevealCard.jsx`** — end-of-game card. Live `useCountdown` hook (HH:MM:SS to midnight) replaces old Next button. No `onNext` prop.
 - **`HowToPlay.jsx`** — compact modal. Hint order: Climate → Borders → Region → Known For → Capital → Flag.
 - **`AuthModal.jsx`** — Google + magic link. React Portal. z-index 99999.
-- **`AtlasModal.jsx`** — Pokédex atlas. Grouped by continent. Flag images from `flagcdn.com`. Sticky headers. 44px tap targets. Mobile: single column under 400px. React Portal.
+- **`AtlasModal.jsx`** — Pokédex atlas. Grouped by continent. Flag images from `flagcdn.com`. Sticky headers. 44px tap targets. Mobile: single column under 400px. React Portal. Collected tiles are clickable buttons → `/countries/<slug>`; uncollected tiles are non-clickable `<div>` placeholders (🔒 ????????) so we preserve the discovery moment.
+- **`CountryPage.jsx`** — `/countries/:slug` route. Public for everyone. Renders flag, name, continent, population, silhouette (revealed), capital, climate, borders, region, known-for, fun fact, "Play today's puzzle" CTA, and prev/next nav. `<Helmet>` sets per-page title, meta description, canonical, OG, Twitter. Two `<script type="application/ld+json">` blocks: `Place` + `BreadcrumbList`. The 404 case (`!country`) sets `noindex`.
+- **`AtlasComplete.jsx`** — celebration screen shown when atlas hits 195/195.
+- **`AdGate.jsx`** — AdSense slot wrapper (not yet enabled in production).
 
 ---
 
@@ -122,7 +133,7 @@ The silhouette border color communicates continent visually before any guesses.
 
 ## Dev mode
 
-URL: `https://globe-iq-one.vercel.app?dev`
+URL: `https://globeiq.app?dev`
 
 - Orange toolbar at top: shows current country name + day offset
 - "Next Puzzle →" increments `devOffset` by 1 (seeds next day's country)
@@ -158,18 +169,31 @@ Note: if logged in, Supabase re-syncs atlas on reload. Sign out first to fully r
 - Env vars needed in Vercel: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
 - Tables: run `src/data/schema.sql` in Supabase SQL editor
 - Auth providers: Google OAuth, Email (magic link)
-- Redirect URL in Supabase Auth settings: `https://globe-iq-one.vercel.app`
+- Redirect URL in Supabase Auth settings: `https://globeiq.app` (also keep `https://globe-iq-one.vercel.app` if it's still being used)
 
 ---
 
 ## Still needed
 
 1. **Large country silhouette scaling** — Russia, USA, Canada appear too small in the 220×220 box
-2. **Test auth end-to-end** — Google OAuth + magic link on live site
-3. **Ad integration** — AdSense or similar
+2. **Test auth end-to-end** — Google OAuth + magic link on live site (now that custom domain is live, retest with `https://globeiq.app` redirect)
+3. **Ad integration** — `AdGate.jsx` exists but unused; AdSense approval depends on `ads.txt` + traffic
 4. **Stripe Pro tier** — $3–5/month unlock
-5. **Custom domain**
-6. **Launch marketing**
+5. **Launch marketing**
+6. **Bundle size** — main JS bundle is 1.39 MB. Vite warns. Code-split when there's time.
+
+---
+
+## SEO architecture (new this session)
+
+- SPA shell ([index.html](index.html)) sets generic homepage tags. **No hardcoded canonical/og:url/twitter:url** — those are per-route.
+- `<HelmetProvider>` wraps `<BrowserRouter>` in [src/main.jsx](src/main.jsx).
+- Homepage route in [src/App.jsx](src/App.jsx) has a `<Helmet>` block (title, description, canonical, OG).
+- [src/components/CountryPage.jsx](src/components/CountryPage.jsx) sets full Helmet tags per country + 2 JSON-LD blocks. Locked tab title is NOT used — pages are public.
+- Vercel rewrite ([vercel.json](vercel.json)) sends every path to `index.html`; React Router resolves the route; Helmet swaps in the right tags before Google's JS-rendering pass picks them up.
+- `react-helmet-async` in `package.json`.
+
+**Known limitation**: this is pure client-side rendering. Google does render JS, but initial HTML is the same for every URL. If indexing stays slow after a month, consider build-time prerendering (`vite-plugin-prerender` or similar) to bake per-country HTML into `dist/countries/<slug>/index.html`. Out of scope until we have GSC data.
 
 ---
 
@@ -195,6 +219,44 @@ Submit one per day until cleared. Paste URL into URL Inspection → Test live UR
 - [ ] `https://globeiq.app/countries/australia`
 
 After this short list, leave the remaining ~180 to Google's sitemap-driven crawl — no need to manually request all 195.
+
+### GSC issues to monitor / validate
+
+After the fix from commit `532cce4` deploys, click "Validate fix" in GSC for each:
+
+- [ ] **Breadcrumbs: Missing field "item"** — fixed by dropping the continent step from the BreadcrumbList JSON-LD.
+- [ ] **Alternate page with proper canonical tag** — fixed by removing the hardcoded canonical/og:url/twitter:url from `index.html` so Helmet's per-route tags aren't overridden in initial HTML.
+- [ ] **Page with redirect** — needs investigation. Click "Open indexing report" in the email and check which URLs are affected. Usually www↔apex or http↔https (benign). If they're real content URLs redirecting unexpectedly, dig in.
+
+### When to check progress
+
+- **~2026-05-20** (week 1): GSC → Pages report. How many of the 197 sitemap URLs show "Indexed"?
+- **~2026-05-28** (week 2): GSC → Performance. First impressions should start appearing for the manually-requested URLs.
+- **~2026-06-14** (month 1): if indexing is still <20% of pages, consider build-time prerendering.
+
+---
+
+## Session log — 2026-05-13 → 2026-05-14
+
+PRs #7 and #8 from `claude/mystifying-curran-210d11`, both merged. Key commits:
+
+- `03720cf` — initial SEO PR: public country pages + `react-helmet-async` + per-route meta tags + JSON-LD (Place + BreadcrumbList).
+- `669ecec` → `c126f9a` — restored lock gate then reverted; final state is public country pages with prev/next nav working on all pages.
+- `9a802f8` — added the GSC indexing todo list to this file.
+- `532cce4` — fixed two GSC complaints: drop continent step from BreadcrumbList (had no `item` URL), and remove hardcoded canonical/og:url/twitter:url from `index.html` so Helmet's per-route tags aren't overridden in initial HTML.
+
+After deploy, validated `/countries/japan` in Rich Results Test and submitted indexing requests for Japan, USA, China.
+
+---
+
+## How to start a new session on this project
+
+1. `cd` into the repo and read this file top-to-bottom.
+2. Check the deployed site at https://globeiq.app — sanity-check the homepage and a country page (e.g. `/countries/japan`).
+3. Check GSC Pages report for the previous week's indexing progress.
+4. Check the "GSC indexing — pending manual requests" section above — submit the next URL if it's been ≥24h since the last batch.
+5. Pick a task from "Still needed" or address any new bugs/feedback.
+6. Branch is `main` for new work; commit + push by default (user's standing instruction).
 
 ---
 
