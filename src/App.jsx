@@ -18,6 +18,9 @@ import AtlasComplete from './components/AtlasComplete'
 import CountryPage from './components/CountryPage'
 import { generateShareText } from './utils/shareCard'
 import { playCorrect, playWrong, playReveal } from './utils/sound'
+import { trackEvent } from './utils/analytics'
+import AdSlot from './components/AdSlot'
+import { AD_SLOT_BETWEEN_ROUNDS } from './utils/adSlots'
 import countries from './data/countries'
 
 const countryNames = countries.map(c => c.name)
@@ -74,8 +77,17 @@ function App() {
   }, [gameStatus, currentCountry])
 
   // Show completion screen when atlas hits 195
+  const prevAtlasCountRef = useRef(null)
   useEffect(() => {
     if (collectedCountries.length >= 195) setShowAtlasComplete(true)
+    if (
+      prevAtlasCountRef.current !== null &&
+      prevAtlasCountRef.current < 195 &&
+      collectedCountries.length >= 195
+    ) {
+      trackEvent('atlas_complete')
+    }
+    prevAtlasCountRef.current = collectedCountries.length
   }, [collectedCountries.length])
 
   // Sound effects — skip firing on initial mount/restore
@@ -105,6 +117,11 @@ function App() {
     if (navigator.share) {
       try {
         await navigator.share({ text })
+        trackEvent('share_result', {
+          country: currentCountry.name,
+          guesses_taken: guesses.length,
+          method: 'web_share',
+        })
         return
       } catch (err) {
         if (err.name === 'AbortError') return
@@ -112,6 +129,11 @@ function App() {
     }
     try {
       await navigator.clipboard.writeText(text)
+      trackEvent('share_result', {
+        country: currentCountry.name,
+        guesses_taken: guesses.length,
+        method: 'clipboard',
+      })
       alert('Copied to clipboard!')
     } catch {
       alert('Could not copy. Try selecting the text manually.')
@@ -160,6 +182,7 @@ function App() {
             target="_blank"
             rel="noopener noreferrer"
             className="bmc-header"
+            onClick={() => trackEvent('support_clicked')}
           >
             ☕ Support
           </a>
@@ -215,7 +238,7 @@ function App() {
                     countryId={currentCountry.id}
                     flagEmoji={currentCountry.flagEmoji}
                   />
-                  <button className="view-map-button" onClick={() => setMapMode(true)}>
+                  <button className="view-map-button" onClick={() => { setMapMode(true); trackEvent('map_viewed') }}>
                     🗺️ View Map
                   </button>
                   <HintPanel guessCount={guessCount} country={currentCountry} />
@@ -250,13 +273,16 @@ function App() {
                 </>
               )}
 
-              {/* Dismissed — show pill + all hints */}
+              {/* Dismissed — show pill + all hints + between-rounds ad */}
               {!mapMode && (gameStatus === 'won' || gameStatus === 'lost') && revealDismissed && (
                 <>
                   <button type="button" className="reveal-pill" onClick={() => setRevealDismissed(false)}>
                     {gameStatus === 'won' ? '🎉 You got it! Tap to see result' : '😔 Tap to see card'}
                   </button>
                   <HintPanel guessCount={6} country={currentCountry} />
+                  <div style={{ width: '100%', maxWidth: 480, margin: '24px auto 0' }}>
+                    <AdSlot slotId={AD_SLOT_BETWEEN_ROUNDS} />
+                  </div>
                 </>
               )}
 

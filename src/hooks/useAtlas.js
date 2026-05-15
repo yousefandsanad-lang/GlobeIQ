@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { createPlayerIfNotExists, syncAtlasToCloud, loadAtlasFromCloud } from '../utils/syncService'
+import { trackEvent, atlasMilestoneFor } from '../utils/analytics'
 
 const STORAGE_KEY = 'globeiq_atlas'
 
@@ -58,6 +59,10 @@ export default function useAtlas(user) {
       const next = [...prev, String(countryId)]
       writeLocal(user?.id ?? null, next)
       if (user) syncAtlasToCloud(user.id, next)
+      const milestone = atlasMilestoneFor(next.length)
+      if (milestone !== null) {
+        trackEvent('atlas_milestone', { count: milestone })
+      }
       return next
     })
   }
