@@ -1,3 +1,6 @@
+import { useEffect, useRef } from 'react'
+import { trackEvent } from '../utils/analytics'
+
 const hints = country => [
   { icon: '🌡️', label: 'Climate & Terrain', value: country.climate },
   { icon: '🗺️', label: 'Borders',           value: country.borders === 0 ? 'Island — no land borders' : `${country.borders} land border${country.borders === 1 ? '' : 's'}` },
@@ -9,6 +12,18 @@ const hints = country => [
 
 export default function HintPanel({ guessCount, country }) {
   const visible = hints(country).slice(0, guessCount)
+
+  const prevCountRef = useRef(null)
+  useEffect(() => {
+    // Skip the initial mount / restore — only fire on real reveals during this session.
+    if (prevCountRef.current !== null && guessCount > prevCountRef.current && guessCount <= 6) {
+      trackEvent('hint_reveal', {
+        hint_number: guessCount,
+        country: country?.name,
+      })
+    }
+    prevCountRef.current = guessCount
+  }, [guessCount, country?.name])
 
   return (
     <div className="hint-panel">

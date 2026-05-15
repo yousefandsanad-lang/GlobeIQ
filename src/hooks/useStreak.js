@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { syncStreakToCloud, loadStreakFromCloud } from '../utils/syncService'
+import { trackEvent, streakMilestoneFor } from '../utils/analytics'
 
 const STORAGE_KEY = 'globeiq_streak'
 
@@ -88,6 +89,11 @@ export default function useStreak(user) {
     setLastPlayedDate(today)
     writeLocal(nextCurrent, nextBest, today)
     if (user) syncStreakToCloud(user.id, nextCurrent, nextBest, today)
+
+    const milestone = streakMilestoneFor(nextCurrent)
+    if (milestone !== null) {
+      trackEvent('streak_milestone', { streak: milestone })
+    }
   }
 
   function recordLoss() {

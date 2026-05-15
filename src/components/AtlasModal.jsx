@@ -2,6 +2,8 @@ import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { slugify } from '../utils/slug'
+import AdSlot from './AdSlot'
+import { AD_SLOT_ATLAS_MODAL } from '../utils/adSlots'
 
 function flagEmojiToIso2(emoji) {
   try {
@@ -263,6 +265,10 @@ export default function AtlasModal({ collectedCountries, onClose, allCountries }
                 </div>
               )
             })}
+
+            <div style={{ marginTop: 16 }}>
+              <AdSlot slotId={AD_SLOT_ATLAS_MODAL} />
+            </div>
           </div>
         </div>
       </div>

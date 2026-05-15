@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import countries from '../data/countries.js'
+import { trackEvent } from '../utils/analytics'
 
 const GAME_KEY = 'globeiq_current_game'
 const FAILS_KEY = 'globeiq_recent_fails'
@@ -77,6 +78,9 @@ export default function useGameLogic(collectedCountries = [], atlasLoaded = fals
     } else {
       const next = pickNext(collectedCountries)
       setCurrentCountry(next)
+      if (next) {
+        trackEvent('game_start', { country: next.name, difficulty: next.difficulty })
+      }
     }
     setLoaded(true)
   }, [atlasLoaded])
@@ -134,22 +138,26 @@ export default function useGameLogic(collectedCountries = [], atlasLoaded = fals
       (normalizedGuess === currentCountry.name.toLowerCase() ||
         (currentCountry.aliases?.some(a => a.toLowerCase() === normalizedGuess) ?? false))
 
+    trackEvent('guess_submit', {
+      guess_number: newCount,
+      is_correct: isCorrect,
+      country: currentCountry?.name,
+    })
+
     if (isCorrect) {
       setGameStatus('won')
-      if (typeof gtag === 'function') {
-        gtag('event', 'game_won', {
-          guesses_taken: newCount,
-          country: currentCountry.name,
-        })
-      }
+      trackEvent('game_won', {
+        guesses_taken: newCount,
+        country: currentCountry.name,
+        difficulty: currentCountry.difficulty,
+      })
     } else if (newCount >= MAX_GUESSES) {
       recordFail(currentCountry.id)
       setGameStatus('lost')
-      if (typeof gtag === 'function') {
-        gtag('event', 'game_lost', {
-          country: currentCountry.name,
-        })
-      }
+      trackEvent('game_lost', {
+        country: currentCountry.name,
+        difficulty: currentCountry.difficulty,
+      })
     }
   }
 
@@ -159,10 +167,19 @@ export default function useGameLogic(collectedCountries = [], atlasLoaded = fals
     setGuesses([])
     setGuessCount(0)
     setGameStatus('playing')
+    if (next) {
+      trackEvent('game_start', { country: next.name, difficulty: next.difficulty })
+    }
   }
 
   function skipCountry() {
-    if (currentCountry) recordFail(currentCountry.id) // avoid immediate repeat
+    if (currentCountry) {
+      recordFail(currentCountry.id) // avoid immediate repeat
+      trackEvent('country_skipped', {
+        country: currentCountry.name,
+        guess_count_at_skip: guessCount,
+      })
+    }
     try { localStorage.removeItem(GAME_KEY) } catch {}
     nextCountry()
   }

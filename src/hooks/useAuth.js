@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import supabase from '../utils/supabase'
+import { trackEvent } from '../utils/analytics'
 
 export default function useAuth() {
   const [user, setUser] = useState(null)
@@ -11,8 +12,12 @@ export default function useAuth() {
       setLoading(false)
     })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null)
+      if (event === 'SIGNED_IN' && session?.user) {
+        const provider = session.user.app_metadata?.provider ?? 'unknown'
+        trackEvent('auth_signin_completed', { provider })
+      }
     })
 
     return () => subscription.unsubscribe()
