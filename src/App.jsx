@@ -317,6 +317,20 @@ function App() {
         <AtlasComplete onContinue={() => setShowAtlasComplete(false)} />
       )}
 
+      <footer className="globeiq-footer">
+        <a href="/about">About</a>
+        <span aria-hidden="true">·</span>
+        <a href="/how-to-play">How to play</a>
+        <span aria-hidden="true">·</span>
+        <a href="/countries">All countries</a>
+        <span aria-hidden="true">·</span>
+        <a href="/contact">Contact</a>
+        <span aria-hidden="true">·</span>
+        <a href="/privacy.html">Privacy</a>
+        <span aria-hidden="true">·</span>
+        <a href="/terms">Terms</a>
+      </footer>
+
     </div>
   )
 }

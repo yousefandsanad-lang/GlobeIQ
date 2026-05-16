@@ -6,6 +6,7 @@ import AdSlot from './AdSlot'
 import { AD_SLOT_COUNTRY_PAGE } from '../utils/adSlots'
 import { getContinentTheme } from '../utils/continentTheme'
 import { findCountryBySlug, slugify } from '../utils/slug'
+import { getEnrichment } from '../utils/countryEnrichment'
 
 const SITE_URL = 'https://globeiq.app'
 
@@ -49,6 +50,7 @@ export default function CountryPage({ allCountries, collectedCountries }) {
   }
 
   const theme = getContinentTheme(country.continent)
+  const enrichment = getEnrichment(country)
   const canonical = `${SITE_URL}/countries/${slugify(country.name)}`
   const title = `${country.name} — Flag, Capital, Region & Facts | GlobeIQ`
   const description = `${country.name}: capital ${country.capital}, in ${country.continent} (${country.region}). ${country.knownFor}. Play GlobeIQ to collect all 195 countries.`
@@ -136,6 +138,89 @@ export default function CountryPage({ allCountries, collectedCountries }) {
         </div>
       )}
 
+      {enrichment && (
+        <>
+          <section className="country-section">
+            <h2 className="country-section-title">About {country.name}</h2>
+            <p className="country-section-body">
+              {buildOverviewParagraph(country, enrichment)}
+            </p>
+            <p className="country-section-body">
+              {buildGeographyParagraph(country, enrichment)}
+            </p>
+          </section>
+
+          <section className="country-section">
+            <h2 className="country-section-title">Quick facts</h2>
+            <div className="country-facts">
+              {enrichment.officialName && enrichment.officialName !== country.name && (
+                <FactRow icon="📛" label="Official name" value={enrichment.officialName} />
+              )}
+              {enrichment.nativeNames.length > 0 && (
+                <FactRow icon="🗣️" label="Native name" value={enrichment.nativeNames.join(' · ')} />
+              )}
+              {enrichment.demonym && (
+                <FactRow icon="🧑" label="Demonym" value={enrichment.demonym} />
+              )}
+              {enrichment.subregion && (
+                <FactRow icon="🌐" label="Subregion" value={enrichment.subregion} />
+              )}
+              {enrichment.area && (
+                <FactRow icon="📐" label="Area" value={enrichment.area} />
+              )}
+              {enrichment.populationPrecise && (
+                <FactRow icon="👥" label="Population" value={enrichment.populationPrecise} />
+              )}
+              {enrichment.languages.length > 0 && (
+                <FactRow icon="💬" label={enrichment.languages.length > 1 ? 'Languages' : 'Language'} value={enrichment.languages.join(', ')} />
+              )}
+              {enrichment.currencies.length > 0 && (
+                <FactRow
+                  icon="💰"
+                  label={enrichment.currencies.length > 1 ? 'Currencies' : 'Currency'}
+                  value={enrichment.currencies.map(c => `${c.name}${c.symbol ? ` (${c.symbol})` : ''}`).join(', ')}
+                />
+              )}
+              {enrichment.callingCode && (
+                <FactRow icon="📞" label="Calling code" value={enrichment.callingCode} />
+              )}
+              {enrichment.tld && (
+                <FactRow icon="🌐" label="Internet TLD" value={enrichment.tld} />
+              )}
+              {enrichment.drivingSide && (
+                <FactRow icon="🚗" label="Drives on the" value={`${enrichment.drivingSide} side`} />
+              )}
+              {enrichment.timezones.length > 0 && (
+                <FactRow
+                  icon="🕐"
+                  label={enrichment.timezones.length > 1 ? 'Time zones' : 'Time zone'}
+                  value={enrichment.timezones.length > 3 ? `${enrichment.timezones.slice(0, 3).join(', ')} +${enrichment.timezones.length - 3} more` : enrichment.timezones.join(', ')}
+                />
+              )}
+            </div>
+          </section>
+
+          {enrichment.neighbors.length > 0 && (
+            <section className="country-section">
+              <h2 className="country-section-title">Bordering countries</h2>
+              <p className="country-section-body">
+                {country.name} shares land borders with {enrichment.neighbors.length} {enrichment.neighbors.length === 1 ? 'country' : 'countries'}:
+              </p>
+              <ul className="country-neighbors">
+                {enrichment.neighbors.map(name => {
+                  const match = allCountries.find(c => c.name === name)
+                  return (
+                    <li key={name}>
+                      {match ? <Link to={`/countries/${slugify(match.name)}`}>{name}</Link> : name}
+                    </li>
+                  )
+                })}
+              </ul>
+            </section>
+          )}
+        </>
+      )}
+
       <Link to="/" className="country-cta">Play today's puzzle →</Link>
 
       <div style={{ width: '100%', maxWidth: 640, margin: '24px auto 0' }}>
@@ -167,4 +252,53 @@ function FactRow({ icon, label, value }) {
       <span className="country-fact-value">{value}</span>
     </div>
   )
+}
+
+function buildOverviewParagraph(country, e) {
+  const parts = []
+  const official = e.officialName && e.officialName !== country.name
+    ? `, officially the ${e.officialName},`
+    : ''
+  parts.push(`${country.name}${official} is a country in ${country.continent}${e.subregion ? `, specifically in the ${e.subregion} subregion` : ''}.`)
+  if (country.capital) {
+    parts.push(`Its capital is ${country.capital}${e.populationPrecise ? `, and the country is home to roughly ${e.populationPrecise} people` : ''}.`)
+  }
+  if (e.languages.length > 0) {
+    const lang = e.languages.length === 1
+      ? `${e.languages[0]} is the main language spoken`
+      : `${e.languages.slice(0, -1).join(', ')} and ${e.languages.at(-1)} are the main languages spoken`
+    parts.push(`${lang} in ${country.name}.`)
+  }
+  if (e.currencies.length > 0) {
+    const c = e.currencies[0]
+    parts.push(`The official currency is the ${c.name}${c.symbol ? ` (${c.symbol})` : ''}.`)
+  }
+  parts.push(country.knownFor + (country.knownFor.endsWith('.') ? '' : '.'))
+  return parts.join(' ')
+}
+
+function buildGeographyParagraph(country, e) {
+  const parts = []
+  if (e.area) {
+    parts.push(`${country.name} covers approximately ${e.area} of land area.`)
+  }
+  if (country.borders === 0) {
+    parts.push(`It is an island nation with no land borders.`)
+  } else if (country.borders === 1) {
+    parts.push(`It shares a single land border with one neighboring country.`)
+  } else if (country.borders > 1) {
+    parts.push(`It shares land borders with ${country.borders} neighboring countries.`)
+  }
+  if (e.timezones.length > 0) {
+    parts.push(e.timezones.length === 1
+      ? `Standard time follows ${e.timezones[0]}.`
+      : `The country spans ${e.timezones.length} time zones, ranging from ${e.timezones[0]} to ${e.timezones.at(-1)}.`)
+  }
+  if (country.climate) {
+    parts.push(`The climate is best described as: ${country.climate.toLowerCase().replace(/·/g, 'with')}.`)
+  }
+  if (e.drivingSide) {
+    parts.push(`Traffic drives on the ${e.drivingSide} side of the road${e.callingCode ? `, and the international calling code is ${e.callingCode}` : ''}.`)
+  }
+  return parts.join(' ')
 }

@@ -1,0 +1,108 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #0A0E1A;
+  color: #e0e0e0;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 16px;
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+header.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: #ffffff08;
+  border-bottom: 1px solid #ffffff12;
+}
+
+header.site-header a.brand {
+  text-decoration: none;
+  color: #4A90D9;
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: -0.3px;
+}
+
+header.site-header a.brand:hover { color: #6aaaf0; }
+
+.back {
+  font-size: 14px;
+  color: #888;
+  text-decoration: none;
+}
+.back:hover { color: #aaa; }
+
+main.content {
+  max-width: 720px;
+  margin: 48px auto;
+  padding: 0 24px 80px;
+}
+
+main.content h1 {
+  font-size: 28px;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 6px;
+  letter-spacing: -0.5px;
+}
+
+main.content .updated {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 40px;
+}
+
+main.content section { margin-bottom: 36px; }
+
+main.content h2 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #4A90D9;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 12px;
+}
+
+main.content p { margin-bottom: 12px; }
+main.content p:last-child { margin-bottom: 0; }
+
+main.content ul { list-style: none; padding: 0; }
+main.content ul li {
+  padding: 6px 0 6px 20px;
+  position: relative;
+  color: #ccc;
+}
+main.content ul li::before {
+  content: "–";
+  position: absolute;
+  left: 0;
+  color: #4A90D9;
+}
+
+main.content a { color: #4A90D9; text-decoration: none; }
+main.content a:hover { text-decoration: underline; }
+
+main.content .card {
+  background: #ffffff08;
+  border: 1px solid #ffffff12;
+  border-radius: 12px;
+  padding: 20px 24px;
+}
+
+footer.site-footer {
+  text-align: center;
+  padding: 24px;
+  font-size: 13px;
+  color: #555;
+  border-top: 1px solid #ffffff0a;
+}
+
+footer.site-footer a {
+  color: #888;
+  text-decoration: none;
+  margin: 0 8px;
+}
+footer.site-footer a:hover { color: #ccc; }
