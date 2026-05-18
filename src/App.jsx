@@ -326,7 +326,7 @@ function App() {
         <span aria-hidden="true">·</span>
         <a href="/contact">Contact</a>
         <span aria-hidden="true">·</span>
-        <a href="/privacy.html">Privacy</a>
+        <a href="/privacy">Privacy</a>
         <span aria-hidden="true">·</span>
         <a href="/terms">Terms</a>
       </footer>
