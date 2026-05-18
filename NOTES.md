@@ -18,7 +18,20 @@ Dev mode: https://globe-iq-one.vercel.app?dev
 
 ---
 
-## Current status (as of 2026-05-14)
+## Current status (as of 2026-05-16)
+
+### Open right now
+
+**Waiting on Google AdSense re-review.** Site `globeiq.app` was rejected once on
+2026-05-16 for "Low value content" — fixed in branch
+`claude/compassionate-feistel-73a546` (commit `939fb6e`). After that branch
+merges to main and Vercel deploys, go to AdSense → Sites → globeiq.app, tick
+"I confirm I have fixed the issues" → "Request review". Re-review takes 1–4 weeks.
+
+In the meantime, ads.txt status is **Authorized** and the AdSense + GA4 scripts
+are wired. No ads will display until AdSense flips Approval status to **Ready**.
+`<ins class="adsbygoogle">` slots already exist in 3 places and will start
+filling automatically the moment approval lands — no further code needed.
 
 ### Completed
 
@@ -62,6 +75,19 @@ Dev mode: https://globe-iq-one.vercel.app?dev
 - **JSON-LD per country page**: `Place` schema (name, knownFor, address, containedInPlace) + 2-step `BreadcrumbList` (GlobeIQ → Country). The continent breadcrumb step was removed because it had no `item` URL and GSC flagged it.
 - **Sitemap** (`public/sitemap.xml`) — 197 URLs: `/`, `/privacy.html`, and all 195 country pages.
 - **GSC**: Domain property `https://globeiq.app` added and verified. Sitemap submitted, status Success. Indexing requested for Japan, USA, China (2026-05-13).
+- **GA4 key events (2026-05-14)**: centralized [src/utils/analytics.js](src/utils/analytics.js) `trackEvent()`. 13 events wired: `game_start`, `guess_submit`, `hint_reveal`, `country_skipped`, `game_won`, `game_lost` (now with `difficulty`), `share_result`, `map_viewed`, `support_clicked`, `atlas_milestone` (10/25/50/100/150), `atlas_complete`, `streak_milestone` (3/7/14/30/100), `auth_signin_completed`. All guarded by initial-mount sentinels so restored sessions don't replay milestones.
+- **AdSense ad slots (2026-05-14)**: reusable [src/components/AdSlot.jsx](src/components/AdSlot.jsx) component, 3 placements wired with real slot IDs (hardcoded in [src/utils/adSlots.js](src/utils/adSlots.js) since they're public): between rounds (`8251401434`), country page bottom (`6938319760`), atlas modal footer (`5625238099`). Render `null` if slot ID env override is unset. Pre-approval: slots collapse to zero height (responsive `auto` format), no layout shift.
+- **AdSense ads.txt Authorized (2026-05-15)**: AdSense's crawler accepted `public/ads.txt`. Approval status still "Getting ready" → then rejected for low value content → fix shipped (see below).
+- **AdSense low-value-content fix (2026-05-16, branch `claude/compassionate-feistel-73a546`)**:
+  - Per-country pages went from ~100 words of unique content to **320–400 words each**, all baked into static HTML at build time.
+  - REST Countries v3.1 enrichment cached in [src/data/countries-enrichment.json](src/data/countries-enrichment.json) (256KB, 195 countries). Fetcher script: [scripts/fetch-country-enrichment.mjs](scripts/fetch-country-enrichment.mjs) (`npm run fetch:enrichment` to refresh).
+  - [src/components/CountryPage.jsx](src/components/CountryPage.jsx) and [src/utils/countryEnrichment.js](src/utils/countryEnrichment.js) render: official + native names, demonym, subregion, area, precise population, languages, currencies, calling code, internet TLD, driving side, time zones, neighboring countries (linked).
+  - **Build-time pre-rendering** ([scripts/prerender.mjs](scripts/prerender.mjs), runs as postbuild step): generates `dist/countries/{slug}.html` for all 195 countries with full content, meta tags, OG, Twitter cards, JSON-LD (`Place` + `BreadcrumbList`), AdSense + GA4 scripts inlined. Plus a `/countries` index hub grouping all 195 by continent (568 words). **Googlebot now sees real HTML on every URL, not an SPA shell.**
+  - 4 new static content pages in `public/`: [about.html](public/about.html) (469w), [how-to-play.html](public/how-to-play.html) (623w), [terms.html](public/terms.html) (727w), [contact.html](public/contact.html) (304w). Shared style in [public/content.css](public/content.css).
+  - Footer added to main React app linking to all content pages.
+  - [vercel.json](vercel.json) updated with `cleanUrls: true`, `trailingSlash: false`. SPA fallback rewrite still in place — filesystem matches take precedence.
+  - [public/sitemap.xml](public/sitemap.xml) extended with `/about`, `/how-to-play`, `/contact`, `/terms`, `/countries`.
+  - `npm run build` now runs `vite build && node scripts/prerender.mjs`.
 
 ### Header
 - 🌍 GlobeIQ logo left
@@ -175,12 +201,14 @@ Note: if logged in, Supabase re-syncs atlas on reload. Sign out first to fully r
 
 ## Still needed
 
-1. **Large country silhouette scaling** — Russia, USA, Canada appear too small in the 220×220 box
-2. **Test auth end-to-end** — Google OAuth + magic link on live site (now that custom domain is live, retest with `https://globeiq.app` redirect)
-3. **Ad integration** — `AdGate.jsx` exists but unused; AdSense approval depends on `ads.txt` + traffic
-4. **Stripe Pro tier** — $3–5/month unlock
-5. **Launch marketing**
-6. **Bundle size** — main JS bundle is 1.39 MB. Vite warns. Code-split when there's time.
+1. **Merge `claude/compassionate-feistel-73a546` to main, then request AdSense re-review.** PR URL: https://github.com/yousefandsanad-lang/GlobeIQ/pull/new/claude/compassionate-feistel-73a546. After merge + Vercel deploy, AdSense → Sites → globeiq.app → tick "I confirm I have fixed the issues" → "Request review".
+2. **In GA4 console**: once new events show up in Admin → Events (~24h after first fire), toggle "Mark as key event" on `game_won`, `share_result`, `atlas_milestone`, `auth_signin_completed`, `support_clicked`. This is what AdSense's optimizer uses to identify valuable users.
+3. **Large country silhouette scaling** — Russia, USA, Canada appear too small in the 220×220 box
+4. **Test auth end-to-end** — Google OAuth + magic link on live site (now that custom domain is live, retest with `https://globeiq.app` redirect)
+5. **`AdGate.jsx`** still uses a fake 3-second timer, not real ads. Either replace with a real rewarded-ad slot or delete the component.
+6. **Stripe Pro tier** — $3–5/month unlock
+7. **Launch marketing**
+8. **Bundle size** — main JS bundle is now 1.53 MB (slightly larger after enrichment imports). Vite warns. Code-split when there's time.
 
 ---
 
@@ -193,7 +221,7 @@ Note: if logged in, Supabase re-syncs atlas on reload. Sign out first to fully r
 - Vercel rewrite ([vercel.json](vercel.json)) sends every path to `index.html`; React Router resolves the route; Helmet swaps in the right tags before Google's JS-rendering pass picks them up.
 - `react-helmet-async` in `package.json`.
 
-**Known limitation**: this is pure client-side rendering. Google does render JS, but initial HTML is the same for every URL. If indexing stays slow after a month, consider build-time prerendering (`vite-plugin-prerender` or similar) to bake per-country HTML into `dist/countries/<slug>/index.html`. Out of scope until we have GSC data.
+**Pre-rendering DONE (2026-05-16)**: the SPA limitation noted previously is resolved. [scripts/prerender.mjs](scripts/prerender.mjs) generates static HTML for every country page + a `/countries` index hub at build time. Googlebot and AdSense now see fully-baked content with all metadata + JSON-LD, not a React shell. SPA-style navigation continues to work because React Router handles in-app transitions; direct visits hit the static files (filesystem match wins over the SPA rewrite). The Helmet-based per-route tags still exist as a fallback for routes not pre-rendered.
 
 ---
 
@@ -236,6 +264,27 @@ After the fix from commit `532cce4` deploys, click "Validate fix" in GSC for eac
 
 ---
 
+## Session log — 2026-05-14 → 2026-05-16 (branch `claude/compassionate-feistel-73a546`)
+
+Goal of the session: "add key events to make money" → resolved into a two-stage push to actually monetize.
+
+**Stage 1: GA4 events + AdSense slots (commits `7b4ee00`, `84b798b`)**
+
+- Built [src/utils/analytics.js](src/utils/analytics.js) as a single chokepoint for `gtag` calls.
+- Instrumented 13 GA4 events across `useGameLogic`, `useAtlas`, `useStreak`, `useAuth`, `HintPanel`, `App`. All initial-mount-guarded.
+- Built reusable [src/components/AdSlot.jsx](src/components/AdSlot.jsx). Renders `<ins class="adsbygoogle">` and calls `adsbygoogle.push({})` exactly once per mount.
+- Dropped slot units at: between rounds (after reveal dismissed), bottom of CountryPage, footer of AtlasModal.
+- Created 3 AdSense ad units in console, hardcoded their slot IDs (they're public — they render in HTML).
+
+**Stage 2: AdSense rejection + fix (commit `939fb6e`)**
+
+- ads.txt flipped to "Authorized" on 2026-05-15 ✓.
+- Then on 2026-05-16, AdSense Approval status → **"Needs attention"** with **"Low value content"** policy violation. Diagnosis: pure-SPA site shipping 195 country pages as identical empty `<div id="root">` shells with ~100 words of unique content each.
+- Fix shipped: REST Countries enrichment + 320–400 words of unique narrative + structured facts per country + 4 substantial content pages (about/how-to-play/terms/contact at 304–727 words) + build-time pre-rendering of all 195 country pages and a `/countries` hub → static HTML files Googlebot and AdSense can index without JS.
+- All on branch `claude/compassionate-feistel-73a546`, **not yet merged to main**. User needs to merge + redeploy + click "Request review" in AdSense.
+
+---
+
 ## Session log — 2026-05-13 → 2026-05-14
 
 PRs #7 and #8 from `claude/mystifying-curran-210d11`, both merged. Key commits:
@@ -252,11 +301,15 @@ After deploy, validated `/countries/japan` in Rich Results Test and submitted in
 ## How to start a new session on this project
 
 1. `cd` into the repo and read this file top-to-bottom.
-2. Check the deployed site at https://globeiq.app — sanity-check the homepage and a country page (e.g. `/countries/japan`).
-3. Check GSC Pages report for the previous week's indexing progress.
-4. Check the "GSC indexing — pending manual requests" section above — submit the next URL if it's been ≥24h since the last batch.
-5. Pick a task from "Still needed" or address any new bugs/feedback.
-6. Branch is `main` for new work; commit + push by default (user's standing instruction).
+2. **Check whether branch `claude/compassionate-feistel-73a546` has been merged to main yet.** If not — that's the AdSense rejection fix. Confirm with the user whether they want to merge, then nudge: PR URL https://github.com/yousefandsanad-lang/GlobeIQ/pull/new/claude/compassionate-feistel-73a546.
+3. **Check AdSense status** — https://www.google.com/adsense/u/1/pub-6930930871941912/sites/list. Look at globeiq.app's Approval status column:
+   - "Getting ready" or "Needs attention" → still waiting / something new flagged.
+   - "Ready" → ads are live, time to optimize. Check AdSense Reports for the first revenue + ask user whether they want more slot units placed.
+4. Check the deployed site at https://globeiq.app — sanity-check the homepage, a country page (e.g. `/countries/japan`), and one of the new pages (`/about`, `/how-to-play`, `/terms`, `/contact`, `/countries`).
+5. Check GSC Pages report for indexing progress on the 200 sitemap URLs (now includes the 5 new content pages + the /countries hub).
+6. Check the "GSC indexing — pending manual requests" section — submit the next URL if it's been ≥24h since the last batch.
+7. Pick a task from "Still needed" or address any new bugs/feedback.
+8. Branch is `main` for new work (unless the compassionate-feistel branch is still open). Commit + push by default (user's standing instruction).
 
 ---
 

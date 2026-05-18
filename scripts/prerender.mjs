@@ -284,7 +284,7 @@ function renderCountryHtml(country, prev, next) {
 </main>
 
 <footer class="ssg-footer">
-  <a href="/">Play</a> · <a href="/countries">All countries</a> · <a href="/about">About</a> · <a href="/how-to-play">How to play</a> · <a href="/privacy.html">Privacy</a> · <a href="/terms">Terms</a> · <a href="/contact">Contact</a>
+  <a href="/">Play</a> · <a href="/countries">All countries</a> · <a href="/about">About</a> · <a href="/how-to-play">How to play</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="/contact">Contact</a>
 </footer>
 
 </body>
@@ -348,7 +348,7 @@ function renderIndexHub(sorted) {
 </main>
 
 <footer class="ssg-footer">
-  <a href="/">Play</a> · <a href="/about">About</a> · <a href="/how-to-play">How to play</a> · <a href="/privacy.html">Privacy</a> · <a href="/terms">Terms</a> · <a href="/contact">Contact</a>
+  <a href="/">Play</a> · <a href="/about">About</a> · <a href="/how-to-play">How to play</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="/contact">Contact</a>
 </footer>
 
 </body>
