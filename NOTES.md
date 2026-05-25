@@ -285,6 +285,31 @@ Goal of the session: "add key events to make money" → resolved into a two-stag
 
 ---
 
+## Session log — 2026-05-25 (GSC "fix failed" follow-up)
+
+GSC emailed: "Some fixes failed for Page indexing issues on site globeiq.app" for the **Alternate page with proper canonical tag** issue.
+
+Sanity-checked the live site — the fix from `3917fb5` is correctly deployed:
+
+| URL | canonical |
+|---|---|
+| `/` | `https://globeiq.app/` ✓ |
+| `/countries/japan` | `https://globeiq.app/countries/japan` ✓ |
+| `/privacy`, `/about`, `/how-to-play`, `/contact`, `/terms`, `/countries` | each self-canonical ✓ |
+| `http://…` and trailing-slash variants | 308 → canonical ✓ |
+| `https://www.globeiq.app/*` | 200 OK, canonical points to apex (correct, but **flagged below**) |
+
+**Likely culprit**: `www.globeiq.app` resolves with 200 OK and a canonical pointing to the apex. That's the textbook "Alternate page with proper canonical tag" pattern — Google honors the canonical but keeps listing the www URL under that issue. Validation can't "pass" while www stays reachable. Two clean fixes:
+
+1. In Vercel domain settings, redirect `www.globeiq.app` → `globeiq.app` (308). Removes the alternate entirely.
+2. Or accept it — it's informational, not a ranking penalty.
+
+**Also tried and discarded**: a vite-prerender-plugin approach to React-SSR the routes. Realized it duplicates [scripts/prerender.mjs](scripts/prerender.mjs) (which already writes static `dist/countries/<slug>.html` with per-route canonicals). Dropped.
+
+**Next step**: open the issue in GSC, copy the specific URLs still listed as failing. If they're all `www.globeiq.app/*`, add the redirect in Vercel. If any are apex URLs, paste them into a new session for diagnosis.
+
+---
+
 ## Session log — 2026-05-13 → 2026-05-14
 
 PRs #7 and #8 from `claude/mystifying-curran-210d11`, both merged. Key commits:
