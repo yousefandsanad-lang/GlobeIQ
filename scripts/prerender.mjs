@@ -3,12 +3,14 @@
 // a fully-rendered static HTML file for every country at:
 //   dist/countries/{slug}.html
 // Plus an index hub at dist/countries/index.html that links to all 195.
+// Also rewrites dist/index.html with rich SEO content injected below the React
+// mount point, so the homepage is no longer an empty "Loading…" shell to crawlers.
 //
 // Vercel serves these static files in preference to the SPA fallback rewrite
 // (filesystem matches always win over rewrites), so Googlebot and AdSense
 // see real content while in-app React-Router navigation still works.
 
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
+import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync, readdirSync, statSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 import { default as countries } from '../src/data/countries.js'
@@ -18,7 +20,6 @@ const root = resolve(__dirname, '..')
 const dist = resolve(root, 'dist')
 
 const enrichmentRaw = JSON.parse(readFileSync(resolve(root, 'src/data/countries-enrichment.json'), 'utf-8'))
-const shell = readFileSync(resolve(dist, 'index.html'), 'utf-8')
 
 const SITE = 'https://globeiq.app'
 
@@ -63,7 +64,9 @@ function getEnrichment(country) {
       : [],
     subregion: raw.subregion ?? null,
     area: formatArea(raw.area),
+    areaKm2: typeof raw.area === 'number' ? raw.area : null,
     populationPrecise: formatPopulation(raw.population),
+    populationRaw: typeof raw.population === 'number' ? raw.population : null,
     currencies: raw.currencies ? Object.entries(raw.currencies).map(([code, info]) => ({
       code, name: info?.name ?? code, symbol: info?.symbol ?? null,
     })) : [],
@@ -74,41 +77,173 @@ function getEnrichment(country) {
     drivingSide: raw.car?.side ?? null,
     neighbors: Array.isArray(raw.borders) ? raw.borders.map(c => NAME_BY_CCA3[c] ?? c) : [],
     demonym: raw.demonyms?.eng?.m ?? null,
+    independent: typeof raw.independent === 'boolean' ? raw.independent : null,
+    unMember: typeof raw.unMember === 'boolean' ? raw.unMember : null,
+    startOfWeek: raw.startOfWeek ?? null,
+    latlng: Array.isArray(raw.latlng) ? raw.latlng : null,
   }
+}
+
+// ─── Prose builders ─────────────────────────────────────────────────────────
+
+function hemisphereFromLatLng(latlng) {
+  if (!latlng) return null
+  const [lat, lng] = latlng
+  const ns = lat >= 0 ? 'Northern' : 'Southern'
+  const ew = lng >= 0 ? 'Eastern' : 'Western'
+  return { ns, ew, both: `${ns} and ${ew}` }
+}
+
+function compareArea(km2) {
+  if (typeof km2 !== 'number') return null
+  if (km2 < 1000) return 'one of the smallest sovereign states in the world by land area'
+  if (km2 < 25_000) return 'a small country by land area'
+  if (km2 < 100_000) return 'a relatively compact country by land area'
+  if (km2 < 500_000) return 'a mid-sized country by land area'
+  if (km2 < 2_500_000) return 'a large country by land area'
+  return 'one of the largest countries in the world by land area'
+}
+
+function comparePopulation(p) {
+  if (typeof p !== 'number') return null
+  if (p < 100_000) return 'a microstate by population'
+  if (p < 1_000_000) return 'a small nation in terms of population'
+  if (p < 10_000_000) return 'a modestly populated country'
+  if (p < 50_000_000) return 'a country of significant population size'
+  if (p < 200_000_000) return 'one of the more populous nations on Earth'
+  return 'among the most populous countries in the world'
 }
 
 function buildOverview(country, e) {
   const parts = []
   const official = e.officialName && e.officialName !== country.name ? `, officially the ${e.officialName},` : ''
-  parts.push(`${country.name}${official} is a country in ${country.continent}${e.subregion ? `, specifically in the ${e.subregion} subregion` : ''}.`)
-  if (country.capital) parts.push(`Its capital is ${country.capital}${e.populationPrecise ? `, and the country is home to roughly ${e.populationPrecise} people` : ''}.`)
+  parts.push(`${country.name}${official} is a sovereign country located in ${country.continent}${e.subregion ? `, specifically within the ${e.subregion} subregion` : ''}.`)
+  if (country.capital) {
+    parts.push(`Its capital and largest urban centre is ${country.capital}${e.populationPrecise ? `, and the country is home to approximately ${e.populationPrecise} people` : ''}.`)
+  }
+  if (e.nativeNames?.length > 0) {
+    parts.push(`In its native language${e.nativeNames.length > 1 ? 's' : ''}, the country is known as ${e.nativeNames.slice(0, 3).map(n => `“${n}”`).join(', ')}.`)
+  }
   if (e.languages.length > 0) {
     const lang = e.languages.length === 1
-      ? `${e.languages[0]} is the main language spoken`
-      : `${e.languages.slice(0, -1).join(', ')} and ${e.languages.at(-1)} are the main languages spoken`
-    parts.push(`${lang} in ${country.name}.`)
+      ? `${e.languages[0]} serves as the primary official language`
+      : `${e.languages.slice(0, -1).join(', ')} and ${e.languages.at(-1)} are recognised as official or widely-spoken languages`
+    parts.push(`${lang}, shaping daily communication, education, government, and media throughout ${country.name}.`)
   }
   if (e.currencies.length > 0) {
     const c = e.currencies[0]
-    parts.push(`The official currency is the ${c.name}${c.symbol ? ` (${c.symbol})` : ''}.`)
+    parts.push(`The official currency in circulation is the ${c.name}${c.symbol ? ` (${c.symbol})` : ''}, used for all domestic transactions and price-tagged goods.`)
   }
-  parts.push(country.knownFor + (country.knownFor.endsWith('.') ? '' : '.'))
+  parts.push(`${country.knownFor.replace(/^Famous for /, country.name + ' is widely recognised for ').replace(/^known for /i, '')}${country.knownFor.endsWith('.') ? '' : '.'}`)
+  if (e.demonym) parts.push(`People from ${country.name} are referred to as ${e.demonym}.`)
   return parts.join(' ')
 }
 
 function buildGeography(country, e) {
   const parts = []
-  if (e.area) parts.push(`${country.name} covers approximately ${e.area} of land area.`)
-  if (country.borders === 0) parts.push(`It is an island nation with no land borders.`)
-  else if (country.borders === 1) parts.push(`It shares a single land border with one neighboring country.`)
-  else if (country.borders > 1) parts.push(`It shares land borders with ${country.borders} neighboring countries.`)
+  if (e.area) {
+    const cmp = compareArea(e.areaKm2)
+    parts.push(`${country.name} covers approximately ${e.area} of territory, making it ${cmp}.`)
+  }
+  if (country.borders === 0) {
+    parts.push(`The country is an island nation (or otherwise lacks land borders), surrounded entirely by water and dependent on maritime and air links to reach its neighbours.`)
+  } else if (country.borders === 1) {
+    parts.push(`It shares a single land border with one neighbouring country, a geographic fact that has shaped its history, trade routes, and cultural exchange.`)
+  } else if (country.borders > 1) {
+    parts.push(`It shares land borders with ${country.borders} neighbouring countries — a position that has historically influenced migration patterns, regional politics, and cross-border commerce.`)
+  }
+  if (e.latlng) {
+    const hemi = hemisphereFromLatLng(e.latlng)
+    if (hemi) parts.push(`Geographically, ${country.name} sits in the ${hemi.both} Hemisphere, at roughly ${Math.abs(e.latlng[0]).toFixed(1)}° ${e.latlng[0] >= 0 ? 'N' : 'S'}, ${Math.abs(e.latlng[1]).toFixed(1)}° ${e.latlng[1] >= 0 ? 'E' : 'W'}.`)
+  }
   if (e.timezones.length > 0) {
     parts.push(e.timezones.length === 1
-      ? `Standard time follows ${e.timezones[0]}.`
-      : `The country spans ${e.timezones.length} time zones, ranging from ${e.timezones[0]} to ${e.timezones.at(-1)}.`)
+      ? `Standard civil time follows ${e.timezones[0]} year-round, simplifying scheduling for residents and visitors alike.`
+      : `Because of its size and geography, the country spans ${e.timezones.length} time zones, ranging from ${e.timezones[0]} in the west to ${e.timezones.at(-1)} in the east — a logistical consideration for travel, broadcasting, and commerce.`)
   }
-  if (country.climate) parts.push(`The climate is best described as: ${country.climate.toLowerCase().replace(/·/g, 'with')}.`)
-  if (e.drivingSide) parts.push(`Traffic drives on the ${e.drivingSide} side of the road${e.callingCode ? `, and the international calling code is ${e.callingCode}` : ''}.`)
+  if (country.climate) {
+    parts.push(`The prevailing climate of ${country.name} can be summarised as: ${country.climate.toLowerCase().replace(/·/g, 'with')}. Local weather patterns naturally vary by altitude, latitude, and proximity to oceans or mountain ranges.`)
+  }
+  return parts.join(' ')
+}
+
+function buildPeople(country, e) {
+  const parts = []
+  if (e.populationPrecise) {
+    const cmp = comparePopulation(e.populationRaw)
+    parts.push(`With roughly ${e.populationPrecise} inhabitants, ${country.name} is ${cmp}.`)
+  }
+  if (e.languages.length > 0) {
+    parts.push(e.languages.length === 1
+      ? `The principal spoken language is ${e.languages[0]}, which dominates public life, schooling, signage, and the workplace.`
+      : `Linguistic life is plural here: ${e.languages.slice(0, -1).join(', ')} and ${e.languages.at(-1)} are all in active use, with regional and minority tongues often adding further variety.`)
+  }
+  if (e.nativeNames?.length > 0 && e.nativeNames[0] !== country.name) {
+    parts.push(`Locals refer to their homeland as ${e.nativeNames.slice(0, 2).map(n => `“${n}”`).join(' or ')}, a name with linguistic and historical roots that long predate modern borders.`)
+  }
+  if (e.demonym) {
+    parts.push(`Citizens are formally known in English as ${e.demonym}, a demonym that appears in passports, official documents, and international reporting.`)
+  }
+  if (e.currencies.length > 0) {
+    const list = e.currencies.map(c => `the ${c.name}${c.symbol ? ` (${c.symbol})` : ''}`).join(' and ')
+    parts.push(`Economically, ${list} is the medium of exchange used by households and businesses, with exchange rates monitored by the country's central monetary authority.`)
+  }
+  return parts.join(' ')
+}
+
+function buildGovernment(country, e) {
+  const parts = []
+  if (e.independent === true) {
+    parts.push(`${country.name} is recognised internationally as a sovereign, independent state.`)
+  } else if (e.independent === false) {
+    parts.push(`${country.name} is administered as a dependency or constituent territory rather than a fully independent state, while still appearing distinctly on world maps and in many international rankings.`)
+  }
+  if (e.unMember === true) {
+    parts.push(`It is a member state of the United Nations, participating in the General Assembly and various specialised UN agencies.`)
+  } else if (e.unMember === false) {
+    parts.push(`It is not currently a member of the United Nations, though it may engage with international bodies through observer status or regional organisations.`)
+  }
+  parts.push(`On the global stage, ${country.name} is generally classified within the ${country.continent}${e.subregion ? ` region and more specifically the ${e.subregion} subregion` : ' region'}, alongside neighbouring states with shared geographic, historical, or economic ties.`)
+  if (country.region && country.region !== e.subregion && country.region !== country.continent) {
+    parts.push(`GlobeIQ groups it under "${country.region}" for the purposes of the game's regional hint.`)
+  }
+  return parts.join(' ')
+}
+
+function buildTravel(country, e) {
+  const parts = []
+  const bits = []
+  if (country.capital) bits.push(`the capital, ${country.capital}`)
+  if (e.timezones.length > 0) bits.push(e.timezones.length === 1 ? `the local time zone (${e.timezones[0]})` : `the relevant local time zone for their destination`)
+  if (e.currencies.length > 0) bits.push(`the local currency (${e.currencies.map(c => c.name).join(' / ')})`)
+  if (bits.length > 0) parts.push(`Visitors planning a trip to ${country.name} should familiarise themselves with ${bits.join(', ')}.`)
+  if (e.callingCode) {
+    parts.push(`The international dialling prefix is ${e.callingCode}, which is required when phoning a ${country.name} number from abroad.`)
+  }
+  if (e.drivingSide) {
+    parts.push(`Vehicles drive on the ${e.drivingSide} side of the road, an important detail for anyone renting a car or crossing a land border by vehicle.`)
+  }
+  if (e.tld) {
+    parts.push(`The country's top-level internet domain is ${e.tld}, used by local businesses, government sites, and many news organisations.`)
+  }
+  if (e.startOfWeek) {
+    parts.push(`The working week traditionally starts on ${e.startOfWeek.charAt(0).toUpperCase() + e.startOfWeek.slice(1)}, which affects business hours, banking, and public holidays.`)
+  }
+  return parts.join(' ')
+}
+
+function buildAtlasTieIn(country) {
+  const difficultyText = {
+    easy: 'an easier opening puzzle for new players',
+    medium: 'a moderately challenging puzzle, suited to players who already know the major continents',
+    hard: 'a tougher puzzle reserved for geography fans who can pick up subtler hints',
+  }[country.difficulty] || 'one of the 195 puzzles in the GlobeIQ rotation'
+  const parts = []
+  parts.push(`Inside the GlobeIQ game, ${country.name} appears as ${difficultyText}. When the daily puzzle selects this country, players progressively unlock six hints — silhouette, climate and terrain, number of land borders, region, "known for" tagline, and finally the capital city — before a flag reveal confirms the answer.`)
+  if (country.personalityTags?.length > 0) {
+    parts.push(`On its trophy card, ${country.name} carries the personality tags ${country.personalityTags.map(t => `“${t}”`).join(' and ')}, short flavour labels chosen to evoke the country's most recognisable cultural signatures.`)
+  }
+  parts.push(`Adding ${country.name} to your personal atlas is one of 195 small wins on the road to a complete world map. Each correctly guessed nation also contributes to your running streak and unlocks milestone celebrations at 10, 25, 50, 100, and 150 collected countries.`)
   return parts.join(' ')
 }
 
@@ -118,7 +253,7 @@ const STYLE = `
   header.ssg-header{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;background:#ffffff08;border-bottom:1px solid #ffffff12}
   header.ssg-header a.brand{text-decoration:none;color:#4A90D9;font-weight:700;font-size:20px}
   header.ssg-header a.back{font-size:14px;color:#888;text-decoration:none}
-  main.ssg{max-width:720px;margin:32px auto;padding:0 24px 80px}
+  main.ssg{max-width:760px;margin:32px auto;padding:0 24px 80px}
   .flag{font-size:72px;line-height:1;margin-bottom:8px}
   h1{font-size:32px;font-weight:800;color:#fff;letter-spacing:-0.5px;margin-bottom:6px}
   .meta{font-size:14px;color:#888;margin-bottom:20px}
@@ -127,7 +262,7 @@ const STYLE = `
   .badge.locked{background:#ffffff10;color:#888;border:1px solid #ffffff15}
   section{margin-top:28px}
   h2{font-size:13px;font-weight:700;color:#4A90D9;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:10px}
-  p{color:#cfd3dd;font-size:15px;margin-bottom:10px}
+  p{color:#cfd3dd;font-size:15px;margin-bottom:12px}
   ul.facts{list-style:none;padding:0;display:grid;gap:8px}
   ul.facts li{display:flex;justify-content:space-between;gap:12px;background:#ffffff06;border:1px solid #ffffff10;border-radius:10px;padding:10px 14px;font-size:14px}
   ul.facts li .k{color:#888;font-weight:600}
@@ -145,14 +280,18 @@ const STYLE = `
   footer.ssg-footer{text-align:center;padding:24px;font-size:13px;color:#555;border-top:1px solid #ffffff0a}
   footer.ssg-footer a{color:#888;text-decoration:none;margin:0 8px}
   footer.ssg-footer a:hover{color:#ccc}
+  ul.grid{list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px;margin-top:14px}
+  ul.grid li a{display:flex;align-items:center;gap:8px;background:#ffffff06;border:1px solid #ffffff10;border-radius:8px;padding:10px 12px;color:#ddd;text-decoration:none;font-size:14px}
+  ul.grid li a:hover{background:#ffffff12;color:#fff}
+  .flag-em{font-size:18px;line-height:1}
 `
 
 function renderCountryHtml(country, prev, next) {
   const e = getEnrichment(country)
   const slug = slugify(country.name)
   const canonical = `${SITE}/countries/${slug}`
-  const title = `${country.name} — Flag, Capital, Region & Facts | GlobeIQ`
-  const description = `${country.name}: capital ${country.capital}, in ${country.continent}${e?.subregion ? ` (${e.subregion})` : ''}. ${country.knownFor}. Play GlobeIQ to collect all 195 countries.`
+  const title = `${country.name} — Capital, Flag, Geography & Country Facts | GlobeIQ`
+  const description = `${country.name}: capital ${country.capital}, in ${country.continent}${e?.subregion ? ` (${e.subregion})` : ''}. ${country.knownFor}. Read country facts and play GlobeIQ to collect all 195 nations.`
 
   const placeSchema = {
     '@context': 'https://schema.org',
@@ -195,14 +334,20 @@ function renderCountryHtml(country, prev, next) {
     e.timezones.length > 1 ? '🕐 Time zones' : '🕐 Time zone',
     e.timezones.length > 3 ? `${e.timezones.slice(0,3).join(', ')} +${e.timezones.length-3} more` : e.timezones.join(', '),
   ])
+  if (e?.unMember === true) facts.push(['🇺🇳 UN member', 'Yes'])
+  if (e?.independent === false) facts.push(['🏛️ Status', 'Dependency / non-sovereign territory'])
 
   const overview = e ? buildOverview(country, e) : country.knownFor
   const geography = e ? buildGeography(country, e) : ''
+  const people = e ? buildPeople(country, e) : ''
+  const government = e ? buildGovernment(country, e) : ''
+  const travel = e ? buildTravel(country, e) : ''
+  const atlas = buildAtlasTieIn(country)
 
   const neighborsBlock = e?.neighbors?.length > 0
     ? `<section>
         <h2>Bordering countries</h2>
-        <p>${esc(country.name)} shares land borders with ${e.neighbors.length} ${e.neighbors.length === 1 ? 'country' : 'countries'}:</p>
+        <p>${esc(country.name)} shares land borders with ${e.neighbors.length} ${e.neighbors.length === 1 ? 'country' : 'countries'}. Click any neighbour to read about it:</p>
         <ul class="neighbors">
           ${e.neighbors.map(name => {
             const match = countries.find(c => c.name === name)
@@ -262,20 +407,33 @@ function renderCountryHtml(country, prev, next) {
   <section>
     <h2>About ${esc(country.name)}</h2>
     <p>${esc(overview)}</p>
-    ${geography ? `<p>${esc(geography)}</p>` : ''}
   </section>
 
+  ${geography ? `<section><h2>Geography &amp; climate</h2><p>${esc(geography)}</p></section>` : ''}
+
+  ${people ? `<section><h2>People, language &amp; society</h2><p>${esc(people)}</p></section>` : ''}
+
   <section>
-    <h2>Quick facts</h2>
+    <h2>Quick facts at a glance</h2>
     <ul class="facts">
       ${facts.map(([k, v]) => `<li><span class="k">${k}</span><span class="v">${esc(v)}</span></li>`).join('\n      ')}
     </ul>
   </section>
 
-  ${funFactBlock}
+  ${travel ? `<section><h2>Practical travel &amp; daily-life info</h2><p>${esc(travel)}</p></section>` : ''}
+
+  ${government ? `<section><h2>Government &amp; global standing</h2><p>${esc(government)}</p></section>` : ''}
+
   ${neighborsBlock}
 
-  <a class="cta" href="/">Play today's puzzle →</a>
+  ${funFactBlock}
+
+  <section>
+    <h2>${esc(country.name)} in the GlobeIQ atlas</h2>
+    <p>${esc(atlas)}</p>
+  </section>
+
+  <a class="cta" href="/">Play today's GlobeIQ puzzle →</a>
 
   <nav class="adj" aria-label="Adjacent countries">
     ${prev ? `<a href="/countries/${slugify(prev.name)}">◀ ${esc(prev.name)}</a>` : '<span></span>'}
@@ -302,7 +460,8 @@ function renderIndexHub(sorted) {
 
   const sections = continents.map(cont => `
     <section>
-      <h2>${esc(cont)}</h2>
+      <h2>${esc(cont)} (${byContinent[cont].length} countries)</h2>
+      <p>Browse every sovereign nation grouped under ${esc(cont)} on GlobeIQ. Each link opens a dedicated page with that country's capital, official name, languages, currency, area, population, time zones, and more.</p>
       <ul class="grid">
         ${byContinent[cont].map(c => `<li><a href="/countries/${slugify(c.name)}"><span class="flag-em">${c.flagEmoji}</span> ${esc(c.name)}</a></li>`).join('')}
       </ul>
@@ -314,23 +473,17 @@ function renderIndexHub(sorted) {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>All Countries — GlobeIQ</title>
-  <meta name="description" content="Browse all 195 countries on GlobeIQ. Open any country for facts on its capital, climate, currency, languages, area, borders, time zones, and more." />
+  <title>All 195 Countries — Geography Reference | GlobeIQ</title>
+  <meta name="description" content="Browse all 195 sovereign countries on GlobeIQ. Open any country for facts on its capital, climate, currency, languages, area, borders, time zones, and more." />
   <link rel="canonical" href="${SITE}/countries" />
   <meta name="robots" content="index, follow" />
   <meta property="og:type" content="website" />
   <meta property="og:title" content="All Countries — GlobeIQ" />
-  <meta property="og:description" content="195 countries, grouped by continent. Click any to see capital, currency, languages, area, and more." />
+  <meta property="og:description" content="195 sovereign nations, grouped by continent. Click any country to see its capital, currency, languages, area, time zones, and more." />
   <meta property="og:url" content="${SITE}/countries" />
   <meta property="og:image" content="${SITE}/preview.png" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-  <style>${STYLE}
-    ul.grid{list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px}
-    ul.grid li a{display:flex;align-items:center;gap:8px;background:#ffffff06;border:1px solid #ffffff10;border-radius:8px;padding:10px 12px;color:#ddd;text-decoration:none;font-size:14px}
-    ul.grid li a:hover{background:#ffffff12;color:#fff}
-    .flag-em{font-size:18px;line-height:1}
-    main.ssg{max-width:1080px}
-  </style>
+  <style>${STYLE} main.ssg{max-width:1080px}</style>
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-8PQZKTB7KJ"></script>
   <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-8PQZKTB7KJ');</script>
 </head>
@@ -342,8 +495,9 @@ function renderIndexHub(sorted) {
 </header>
 
 <main class="ssg">
-  <h1>All countries</h1>
+  <h1>All 195 countries</h1>
   <div class="meta">${sorted.length} sovereign nations, grouped by continent.</div>
+  <p>GlobeIQ tracks the 195 widely-recognised sovereign states of the modern world — the 193 UN member states plus the Holy See (Vatican City) and the State of Palestine, both of which hold UN observer status. Each country in our index links to a dedicated reference page covering its capital city, official and native names, primary languages, currency, land area, population, time zones, neighbouring countries, climate, and notable cultural or geographic features. Use the continent groupings below to explore regions you know well — or to discover the lesser-known nations that often appear as the trickiest puzzles in the daily game.</p>
   ${sections}
 </main>
 
@@ -356,11 +510,129 @@ function renderIndexHub(sorted) {
 `
 }
 
+// ─── Homepage SEO content injection ─────────────────────────────────────────
+
+function renderHomepageSeoBlock(sorted) {
+  // Index countries grouped by continent for the browse-all section
+  const byContinent = {}
+  for (const c of sorted) {
+    if (!byContinent[c.continent]) byContinent[c.continent] = []
+    byContinent[c.continent].push(c)
+  }
+  const continents = Object.keys(byContinent).sort()
+
+  const continentGrids = continents.map(cont => `
+      <section class="seo-continent">
+        <h3>${esc(cont)} <span class="seo-count">(${byContinent[cont].length})</span></h3>
+        <ul class="seo-grid">
+          ${byContinent[cont].map(c => `<li><a href="/countries/${slugify(c.name)}"><span class="seo-flag">${c.flagEmoji}</span> ${esc(c.name)}</a></li>`).join('')}
+        </ul>
+      </section>
+  `).join('')
+
+  return `
+<div id="seo-content" style="background:#0A0E1A;color:#cfd3dd;font-family:system-ui,-apple-system,sans-serif;line-height:1.7;padding:48px 24px 80px;border-top:1px solid #ffffff10">
+  <style>
+    #seo-content .seo-inner{max-width:880px;margin:0 auto}
+    #seo-content h2{font-size:24px;color:#fff;font-weight:800;margin:32px 0 12px;letter-spacing:-0.3px}
+    #seo-content h3{font-size:16px;color:#4A90D9;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin:18px 0 8px}
+    #seo-content p{font-size:15px;margin:0 0 12px;color:#cfd3dd}
+    #seo-content ul.seo-list{list-style:disc;padding-left:22px;margin:0 0 14px;color:#cfd3dd;font-size:15px}
+    #seo-content ul.seo-list li{margin-bottom:6px}
+    #seo-content .seo-grid{list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px;margin:8px 0 16px}
+    #seo-content .seo-grid li a{display:flex;align-items:center;gap:8px;background:#ffffff06;border:1px solid #ffffff10;border-radius:8px;padding:8px 10px;color:#ddd;text-decoration:none;font-size:14px}
+    #seo-content .seo-grid li a:hover{background:#ffffff12;color:#fff}
+    #seo-content .seo-flag{font-size:18px}
+    #seo-content .seo-count{color:#888;font-size:13px;font-weight:600}
+    #seo-content .seo-cta{display:inline-block;margin-top:14px;background:#4A90D9;color:#fff;padding:12px 22px;border-radius:10px;font-weight:700;text-decoration:none}
+    #seo-content .seo-footer{margin-top:36px;padding-top:20px;border-top:1px solid #ffffff0a;text-align:center;font-size:13px;color:#555}
+    #seo-content .seo-footer a{color:#888;text-decoration:none;margin:0 8px}
+  </style>
+
+  <div class="seo-inner">
+
+    <h2>What is GlobeIQ?</h2>
+    <p>GlobeIQ is a free, daily geography guessing game in which one mystery country is selected from the 195 sovereign nations of the world, and your job is to identify it before running out of guesses. Each wrong guess unlocks one additional hint about the mystery country — its silhouette on the map, its climate and terrain, the number of land borders it shares, the broader world region it belongs to, what it's most famous for, and finally its capital city. A flag reveal seals the answer at the end.</p>
+    <p>Unlike most quiz apps, GlobeIQ isn't about trivia speed. It rewards spatial reasoning, deduction, and slowly recalled fragments of school-day geography. A typical round takes one or two minutes, and every player worldwide gets the same daily country — so you can compare your guess pattern with friends without spoiling the answer.</p>
+
+    <h2>How to play (the full rules)</h2>
+    <p>You start each puzzle with seven guess slots. Type the name of any country into the input field and submit. If you're wrong, GlobeIQ tells you so and reveals the next hint in this order:</p>
+    <ul class="seo-list">
+      <li><strong>Hint 1 — Silhouette.</strong> A rough outline of the mystery country, scaled and centred. Some microstates show a spinning globe icon instead, signalling that the country is too small to render meaningfully at this scale.</li>
+      <li><strong>Hint 2 — Climate &amp; terrain.</strong> A short description like "Tropical &amp; rainforest · Hot &amp; humid year-round" or "Arid desert · Hot days, cold nights".</li>
+      <li><strong>Hint 3 — Land borders.</strong> The exact number of neighbouring countries that share a land border with the mystery nation. Island nations show "0".</li>
+      <li><strong>Hint 4 — Region.</strong> A finer-grained location label, such as "West Africa", "Southern Cone", "Baltic States", or "Microstates" — narrower than just a continent.</li>
+      <li><strong>Hint 5 — Known for.</strong> A one-line cultural tagline summarising what the country is most internationally recognised for — a famous landmark, a culinary tradition, an industry, or a historical legacy.</li>
+      <li><strong>Hint 6 — Capital city.</strong> The capital's name. At this point most players have enough to lock in the right answer.</li>
+      <li><strong>Reveal — Flag.</strong> If your seventh guess is still wrong, GlobeIQ shows the flag, the country name, and the day's fun fact.</li>
+    </ul>
+    <p>Every correct guess is added to your personal world atlas — a saved record of countries you've identified, viewable as a Pokédex-style modal grouped by continent. You can also opt in to a streak counter (consecutive daily wins), which celebrates milestones at 3, 7, 14, 30, and 100 days. Logged-in players have their atlas and streak data synced across devices via secure cloud storage.</p>
+
+    <h2>Why play geography games?</h2>
+    <p>Geography is one of those subjects almost everyone studied at some point and almost no-one keeps practising afterwards. The result is a slow drift: countries that were once obvious become surprisingly hard to place on a blank map, and recent geopolitical changes — new borders, renamed states, post-colonial independence — rarely get refreshed in adult memory. A short daily game is a low-pressure, low-friction way to keep this knowledge alive.</p>
+    <p>There are also concrete cognitive benefits to engaging with maps regularly. Spatial reasoning is correlated with skills as varied as navigation, mental rotation, and even long-term recall of unrelated facts. Geography knowledge is widely used in news comprehension — understanding where a story takes place strongly improves how well people remember the story itself. And for travellers, even a passing familiarity with regions, time zones, capitals, and currencies takes the friction out of trip planning.</p>
+    <p>GlobeIQ is designed for short, repeated sessions rather than long study marathons. The daily puzzle structure encourages a sustainable habit; the hint progression turns each round into a small reasoning exercise; and the atlas turns slow knowledge-building into a visible collection. Over a few months of daily play, most players notice meaningful improvement in their ability to place lesser-known countries — particularly in regions outside their home continent.</p>
+
+    <h2>Browse all 195 countries</h2>
+    <p>Every country GlobeIQ tracks has its own dedicated reference page with facts on its capital, official name, languages, currency, area, population, climate, time zones, neighbouring countries, and more. Use this index to jump directly to any country's page.</p>
+    ${continentGrids}
+
+    <h2>About this site</h2>
+    <p>GlobeIQ is built and maintained as an independent project. All country facts are sourced from open public datasets (primarily REST Countries v3.1, sourced from the CIA World Factbook and similar public-domain references) and curated for clarity. The game's silhouettes are generated from the open-source <em>world-atlas</em> TopoJSON dataset. If you spot an inaccuracy or want to suggest a feature, see our <a href="/contact" style="color:#4A90D9;text-decoration:none">contact page</a> — we read every message.</p>
+    <p>For more detail on how the game works and how data is handled, see the dedicated <a href="/how-to-play" style="color:#4A90D9;text-decoration:none">How to play</a>, <a href="/about" style="color:#4A90D9;text-decoration:none">About</a>, <a href="/privacy" style="color:#4A90D9;text-decoration:none">Privacy</a>, and <a href="/terms" style="color:#4A90D9;text-decoration:none">Terms</a> pages.</p>
+
+    <a class="seo-cta" href="/">▶ Play today's puzzle</a>
+
+    <div class="seo-footer">
+      <a href="/">Play</a> · <a href="/countries">All countries</a> · <a href="/about">About</a> · <a href="/how-to-play">How to play</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="/contact">Contact</a>
+    </div>
+  </div>
+</div>
+`
+}
+
+function injectHomepageSeo(shellHtml, sorted) {
+  const block = renderHomepageSeoBlock(sorted)
+  // Inject directly before </body> so the React app remains untouched at top.
+  if (shellHtml.includes('</body>')) {
+    return shellHtml.replace('</body>', `${block}\n</body>`)
+  }
+  // Fallback: append at end.
+  return shellHtml + block
+}
+
+// ─── Cleanup of stale per-route subdirectories ─────────────────────────────
+// A previous build pipeline (vite-prerender-plugin output, or older versions
+// of this script) created dist/countries/{slug}/index.html files. They conflict
+// with the new flat dist/countries/{slug}.html files when cleanUrls is on, and
+// Vercel will prefer the directory variant. Remove them so the new rich
+// content is what gets served.
+function cleanStaleSubdirs() {
+  const countriesDir = resolve(dist, 'countries')
+  if (!existsSync(countriesDir)) return 0
+  let removed = 0
+  for (const entry of readdirSync(countriesDir)) {
+    const full = resolve(countriesDir, entry)
+    try {
+      const s = statSync(full)
+      if (s.isDirectory()) {
+        rmSync(full, { recursive: true, force: true })
+        removed++
+      }
+    } catch {}
+  }
+  return removed
+}
+
 // ──────────────────────────────────────────────────────────────────────────
 // Main
 
 const sorted = [...countries].sort((a, b) => a.name.localeCompare(b.name))
 mkdirSync(resolve(dist, 'countries'), { recursive: true })
+
+// Drop any stale {slug}/index.html dirs left by previous build pipelines.
+const removedDirs = cleanStaleSubdirs()
+if (removedDirs > 0) console.log(`Removed ${removedDirs} stale country subdirectories`)
 
 let count = 0
 for (let i = 0; i < sorted.length; i++) {
@@ -374,4 +646,9 @@ for (let i = 0; i < sorted.length; i++) {
 
 writeFileSync(resolve(dist, 'countries', 'index.html'), renderIndexHub(sorted))
 
-console.log(`Pre-rendered ${count} country pages + 1 index hub at dist/countries/`)
+// Inject the rich SEO block into dist/index.html for the homepage.
+const indexShell = readFileSync(resolve(dist, 'index.html'), 'utf-8')
+const enrichedIndex = injectHomepageSeo(indexShell, sorted)
+writeFileSync(resolve(dist, 'index.html'), enrichedIndex)
+
+console.log(`Pre-rendered ${count} country pages + 1 index hub + beefed homepage at dist/`)
