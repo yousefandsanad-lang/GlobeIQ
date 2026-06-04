@@ -1,3 +1,21 @@
+# Dependencies
 node_modules
-.env
+
+# Build output
 dist
+
+# Environment / secrets
+.env
+.env*.local
+.env.*.local
+
+# Vercel (contains project IDs and OIDC token in .env.local pulls)
+.vercel
+
+# Editor / OS noise
+.DS_Store
+*.log
+
+# Local Claude tooling state (keep launch.json shareable, ignore the rest)
+.claude/settings.local.json
+.claude/worktrees
