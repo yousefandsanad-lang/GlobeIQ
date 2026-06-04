@@ -256,42 +256,48 @@ function buildAtlasTieIn(country) {
   return parts.join(' ')
 }
 
+// Standalone stylesheet for the prerendered content pages. Mirrors the app's
+// "Aurora / Night-Globe" identity (Space Grotesk display + Inter body, deep
+// navy with aurora washes, glassy cards, cyan→indigo→violet accent) so a
+// visitor arriving from Google sees the same brand as the live game.
 const STYLE = `
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  body{background:#0A0E1A;color:#e0e0e0;font-family:system-ui,-apple-system,sans-serif;font-size:16px;line-height:1.7;min-height:100vh}
-  header.ssg-header{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;background:#ffffff08;border-bottom:1px solid #ffffff12}
-  header.ssg-header a.brand{text-decoration:none;color:#4A90D9;font-weight:700;font-size:20px}
-  header.ssg-header a.back{font-size:14px;color:#888;text-decoration:none}
+  body{background:radial-gradient(1100px 560px at 12% -12%,rgba(56,189,248,0.10),transparent 60%),radial-gradient(1000px 620px at 112% 6%,rgba(168,85,247,0.10),transparent 55%),#070B14;background-attachment:fixed;color:#EEF1F8;font-family:'Inter',system-ui,-apple-system,sans-serif;font-size:16px;line-height:1.7;min-height:100vh;-webkit-font-smoothing:antialiased}
+  header.ssg-header{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;background:rgba(255,255,255,0.02);border-bottom:1px solid rgba(255,255,255,0.08);backdrop-filter:blur(8px);position:sticky;top:0;z-index:5}
+  header.ssg-header a.brand{text-decoration:none;font-family:'Space Grotesk',system-ui,sans-serif;font-weight:700;font-size:20px;color:#EEF1F8;letter-spacing:-0.4px}
+  header.ssg-header a.brand b{font-weight:700;background:linear-gradient(135deg,#38BDF8,#6366F1 52%,#A855F7);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  header.ssg-header a.back{font-size:14px;color:#6B7488;text-decoration:none}
+  header.ssg-header a.back:hover{color:#AEB6C8}
   main.ssg{max-width:760px;margin:32px auto;padding:0 24px 80px}
-  .flag{font-size:72px;line-height:1;margin-bottom:8px}
-  h1{font-size:32px;font-weight:800;color:#fff;letter-spacing:-0.5px;margin-bottom:6px}
-  .meta{font-size:14px;color:#888;margin-bottom:20px}
+  .flag{font-size:72px;line-height:1;margin-bottom:8px;filter:drop-shadow(0 6px 16px rgba(0,0,0,0.4))}
+  h1{font-family:'Space Grotesk',system-ui,sans-serif;font-size:34px;font-weight:700;color:#fff;letter-spacing:-0.8px;margin-bottom:6px}
+  .meta{font-family:'Space Grotesk',system-ui,sans-serif;font-size:13px;color:#4DA3FF;margin-bottom:20px;text-transform:uppercase;letter-spacing:1.4px;font-weight:600}
   .badge{display:inline-block;font-size:11px;padding:3px 8px;border-radius:6px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px}
-  .badge.collected{background:#10b98122;color:#10b981;border:1px solid #10b98144}
-  .badge.locked{background:#ffffff10;color:#888;border:1px solid #ffffff15}
-  section{margin-top:28px}
-  h2{font-size:13px;font-weight:700;color:#4A90D9;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:10px}
-  p{color:#cfd3dd;font-size:15px;margin-bottom:12px}
+  .badge.collected{background:#10b98122;color:#34D399;border:1px solid #10b98144}
+  .badge.locked{background:rgba(255,255,255,0.06);color:#6B7488;border:1px solid rgba(255,255,255,0.08)}
+  section{margin-top:30px}
+  h2{font-family:'Space Grotesk',system-ui,sans-serif;font-size:13px;font-weight:700;color:#4DA3FF;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px}
+  p{color:#AEB6C8;font-size:15px;margin-bottom:12px}
   ul.facts{list-style:none;padding:0;display:grid;gap:8px}
-  ul.facts li{display:flex;justify-content:space-between;gap:12px;background:#ffffff06;border:1px solid #ffffff10;border-radius:10px;padding:10px 14px;font-size:14px}
-  ul.facts li .k{color:#888;font-weight:600}
-  ul.facts li .v{color:#fff;text-align:right}
+  ul.facts li{display:flex;justify-content:space-between;gap:12px;background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:11px 15px;font-size:14px}
+  ul.facts li .k{color:#6B7488;font-weight:600}
+  ul.facts li .v{color:#fff;text-align:right;font-weight:500}
   .neighbors{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
   .neighbors li{display:inline-block}
-  .neighbors a,.neighbors span{background:#ffffff08;border:1px solid #ffffff15;border-radius:999px;padding:4px 10px;font-size:12px;color:#ddd;text-decoration:none}
-  .neighbors a:hover{background:#ffffff15;color:#fff}
-  .cta{display:inline-block;margin-top:24px;background:#4A90D9;color:#fff;padding:12px 22px;border-radius:10px;font-weight:700;text-decoration:none}
-  .cta:hover{background:#5aa0e9}
+  .neighbors a,.neighbors span{background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.08);border-radius:999px;padding:5px 12px;font-size:12px;color:#AEB6C8;text-decoration:none}
+  .neighbors a:hover{background:rgba(255,255,255,0.10);color:#fff}
+  .cta{display:inline-block;margin-top:24px;background:linear-gradient(135deg,#4DA3FF,#6366F1);color:#fff;padding:13px 24px;border-radius:12px;font-weight:700;font-family:'Space Grotesk',system-ui,sans-serif;text-decoration:none;box-shadow:0 6px 20px rgba(77,163,255,0.3)}
+  .cta:hover{filter:brightness(1.08)}
   nav.adj{display:flex;justify-content:space-between;gap:10px;margin-top:32px}
-  nav.adj a{flex:1;background:#ffffff08;border:1px solid #ffffff15;border-radius:10px;padding:10px 14px;color:#ccc;font-size:13px;font-weight:600;text-decoration:none}
-  nav.adj a:hover{background:#ffffff12;color:#fff}
+  nav.adj a{flex:1;background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:11px 15px;color:#AEB6C8;font-size:13px;font-weight:600;text-decoration:none}
+  nav.adj a:hover{background:rgba(255,255,255,0.10);color:#fff}
   nav.adj a.next{text-align:right}
-  footer.ssg-footer{text-align:center;padding:24px;font-size:13px;color:#555;border-top:1px solid #ffffff0a}
-  footer.ssg-footer a{color:#888;text-decoration:none;margin:0 8px}
-  footer.ssg-footer a:hover{color:#ccc}
-  ul.grid{list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px;margin-top:14px}
-  ul.grid li a{display:flex;align-items:center;gap:8px;background:#ffffff06;border:1px solid #ffffff10;border-radius:8px;padding:10px 12px;color:#ddd;text-decoration:none;font-size:14px}
-  ul.grid li a:hover{background:#ffffff12;color:#fff}
+  footer.ssg-footer{text-align:center;padding:28px;font-size:13px;color:#6B7488;border-top:1px solid rgba(255,255,255,0.08)}
+  footer.ssg-footer a{color:#6B7488;text-decoration:none;margin:0 8px}
+  footer.ssg-footer a:hover{color:#AEB6C8}
+  ul.grid{list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:7px;margin-top:14px}
+  ul.grid li a{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:11px 13px;color:#AEB6C8;text-decoration:none;font-size:14px}
+  ul.grid li a:hover{background:rgba(255,255,255,0.10);color:#fff}
   .flag-em{font-size:18px;line-height:1}
 `
 
@@ -394,6 +400,9 @@ function renderCountryHtml(country, prev, next) {
   <meta name="twitter:description" content="${esc(country.knownFor)}. Capital: ${esc(country.capital)}." />
   <meta name="twitter:image" content="${SITE}/preview.png" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" />
   <script type="application/ld+json">${jsonLd(placeSchema)}</script>
   <script type="application/ld+json">${jsonLd(breadcrumbSchema)}</script>
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6930930871941912" crossorigin="anonymous"></script>
@@ -404,7 +413,7 @@ function renderCountryHtml(country, prev, next) {
 <body>
 
 <header class="ssg-header">
-  <a class="brand" href="/">🌍 GlobeIQ</a>
+  <a class="brand" href="/">🌍 Globe<b>IQ</b></a>
   <a class="back" href="/">← Back to game</a>
 </header>
 
@@ -492,6 +501,9 @@ function renderIndexHub(sorted) {
   <meta property="og:url" content="${SITE}/countries" />
   <meta property="og:image" content="${SITE}/preview.png" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" />
   <style>${STYLE} main.ssg{max-width:1080px}</style>
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-8PQZKTB7KJ"></script>
   <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-8PQZKTB7KJ');</script>
@@ -499,7 +511,7 @@ function renderIndexHub(sorted) {
 <body>
 
 <header class="ssg-header">
-  <a class="brand" href="/">🌍 GlobeIQ</a>
+  <a class="brand" href="/">🌍 Globe<b>IQ</b></a>
   <a class="back" href="/">← Back to game</a>
 </header>
 
@@ -540,22 +552,22 @@ function renderHomepageSeoBlock(sorted) {
   `).join('')
 
   return `
-<div id="seo-content" style="background:#0A0E1A;color:#cfd3dd;font-family:system-ui,-apple-system,sans-serif;line-height:1.7;padding:48px 24px 80px;border-top:1px solid #ffffff10">
+<div id="seo-content" style="background:#070B14;color:#AEB6C8;font-family:'Inter',system-ui,-apple-system,sans-serif;line-height:1.7;padding:48px 24px 80px;border-top:1px solid rgba(255,255,255,0.08)">
   <style>
     #seo-content .seo-inner{max-width:880px;margin:0 auto}
-    #seo-content h2{font-size:24px;color:#fff;font-weight:800;margin:32px 0 12px;letter-spacing:-0.3px}
-    #seo-content h3{font-size:16px;color:#4A90D9;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin:18px 0 8px}
-    #seo-content p{font-size:15px;margin:0 0 12px;color:#cfd3dd}
-    #seo-content ul.seo-list{list-style:disc;padding-left:22px;margin:0 0 14px;color:#cfd3dd;font-size:15px}
+    #seo-content h2{font-family:'Space Grotesk',system-ui,sans-serif;font-size:25px;color:#fff;font-weight:700;margin:32px 0 12px;letter-spacing:-0.5px}
+    #seo-content h3{font-family:'Space Grotesk',system-ui,sans-serif;font-size:16px;color:#4DA3FF;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin:18px 0 8px}
+    #seo-content p{font-size:15px;margin:0 0 12px;color:#AEB6C8}
+    #seo-content ul.seo-list{list-style:disc;padding-left:22px;margin:0 0 14px;color:#AEB6C8;font-size:15px}
     #seo-content ul.seo-list li{margin-bottom:6px}
-    #seo-content .seo-grid{list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px;margin:8px 0 16px}
-    #seo-content .seo-grid li a{display:flex;align-items:center;gap:8px;background:#ffffff06;border:1px solid #ffffff10;border-radius:8px;padding:8px 10px;color:#ddd;text-decoration:none;font-size:14px}
-    #seo-content .seo-grid li a:hover{background:#ffffff12;color:#fff}
+    #seo-content .seo-grid{list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:7px;margin:8px 0 16px}
+    #seo-content .seo-grid li a{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.08);border-radius:9px;padding:9px 11px;color:#AEB6C8;text-decoration:none;font-size:14px}
+    #seo-content .seo-grid li a:hover{background:rgba(255,255,255,0.10);color:#fff}
     #seo-content .seo-flag{font-size:18px}
-    #seo-content .seo-count{color:#888;font-size:13px;font-weight:600}
-    #seo-content .seo-cta{display:inline-block;margin-top:14px;background:#4A90D9;color:#fff;padding:12px 22px;border-radius:10px;font-weight:700;text-decoration:none}
-    #seo-content .seo-footer{margin-top:36px;padding-top:20px;border-top:1px solid #ffffff0a;text-align:center;font-size:13px;color:#555}
-    #seo-content .seo-footer a{color:#888;text-decoration:none;margin:0 8px}
+    #seo-content .seo-count{color:#6B7488;font-size:13px;font-weight:600}
+    #seo-content .seo-cta{display:inline-block;margin-top:14px;background:linear-gradient(135deg,#4DA3FF,#6366F1);color:#fff;padding:13px 24px;border-radius:12px;font-weight:700;font-family:'Space Grotesk',system-ui,sans-serif;text-decoration:none;box-shadow:0 6px 20px rgba(77,163,255,0.3)}
+    #seo-content .seo-footer{margin-top:36px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.06);text-align:center;font-size:13px;color:#6B7488}
+    #seo-content .seo-footer a{color:#6B7488;text-decoration:none;margin:0 8px}
   </style>
 
   <div class="seo-inner">
@@ -587,8 +599,8 @@ function renderHomepageSeoBlock(sorted) {
     ${continentGrids}
 
     <h2>About this site</h2>
-    <p>GlobeIQ is built and maintained as an independent project. All country facts are sourced from open public datasets (primarily REST Countries v3.1, sourced from the CIA World Factbook and similar public-domain references) and curated for clarity. The game's silhouettes are generated from the open-source <em>world-atlas</em> TopoJSON dataset. If you spot an inaccuracy or want to suggest a feature, see our <a href="/contact" style="color:#4A90D9;text-decoration:none">contact page</a> — we read every message.</p>
-    <p>For more detail on how the game works and how data is handled, see the dedicated <a href="/how-to-play" style="color:#4A90D9;text-decoration:none">How to play</a>, <a href="/about" style="color:#4A90D9;text-decoration:none">About</a>, <a href="/privacy" style="color:#4A90D9;text-decoration:none">Privacy</a>, and <a href="/terms" style="color:#4A90D9;text-decoration:none">Terms</a> pages.</p>
+    <p>GlobeIQ is built and maintained as an independent project. All country facts are sourced from open public datasets (primarily REST Countries v3.1, sourced from the CIA World Factbook and similar public-domain references) and curated for clarity. The game's silhouettes are generated from the open-source <em>world-atlas</em> TopoJSON dataset. If you spot an inaccuracy or want to suggest a feature, see our <a href="/contact" style="color:#4DA3FF;text-decoration:none">contact page</a> — we read every message.</p>
+    <p>For more detail on how the game works and how data is handled, see the dedicated <a href="/how-to-play" style="color:#4DA3FF;text-decoration:none">How to play</a>, <a href="/about" style="color:#4DA3FF;text-decoration:none">About</a>, <a href="/privacy" style="color:#4DA3FF;text-decoration:none">Privacy</a>, and <a href="/terms" style="color:#4DA3FF;text-decoration:none">Terms</a> pages.</p>
 
     <a class="seo-cta" href="/">▶ Play today's puzzle</a>
 
