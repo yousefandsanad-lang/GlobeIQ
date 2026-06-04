@@ -93,11 +93,11 @@ export default function Silhouette({ continent, revealed, countryName, countryId
         style={{
           '--silhouette-glow': theme.glow,
           position: 'relative',
-          width: 220,
-          height: 220,
-          background: theme.background,
-          border: `2px solid ${theme.primary}`,
-          borderRadius: 16,
+          width: 232,
+          height: 232,
+          background: `radial-gradient(circle at 50% 32%, ${theme.primary}24 0%, ${theme.background} 68%)`,
+          border: `1.5px solid ${theme.primary}66`,
+          borderRadius: 20,
           boxShadow: `0 0 30px ${theme.glow}`,
           display: 'flex',
           flexDirection: 'column',
@@ -143,10 +143,11 @@ export default function Silhouette({ continent, revealed, countryName, countryId
             height={200}
             viewBox="0 0 200 200"
             style={{
-              overflow: 'hidden',
+              overflow: 'visible',
               WebkitBackfaceVisibility: 'hidden',
               backfaceVisibility: 'hidden',
               WebkitTransform: 'translate3d(0,0,0)',
+              filter: 'drop-shadow(0 3px 10px rgba(0,0,0,0.5))',
             }}
           >
             <defs>

@@ -16,6 +16,7 @@ import AuthModal from './components/AuthModal'
 import AtlasModal from './components/AtlasModal'
 import AtlasComplete from './components/AtlasComplete'
 import CountryPage from './components/CountryPage'
+import Confetti from './components/Confetti'
 import { generateShareText } from './utils/shareCard'
 import { playCorrect, playWrong, playReveal } from './utils/sound'
 import { trackEvent } from './utils/analytics'
@@ -166,14 +167,17 @@ function App() {
         </div>
       )}
 
-      <header id="globeiq-header" style={{ position: 'relative', overflow: 'visible', marginTop: isDevMode ? 36 : 0, opacity: mapMode ? 0 : 1, pointerEvents: mapMode ? 'none' : 'auto', transition: 'opacity 0.3s ease' }}>
-        <h1>🌍 GlobeIQ</h1>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <button className="help-button" onClick={() => setShowHowToPlay(true)} aria-label="How to play">?</button>
-          <span className="streak-badge" title="Current win streak">🔥 {currentStreak}</span>
+      <header id="globeiq-header" style={{ marginTop: isDevMode ? 36 : 0, opacity: mapMode ? 0 : 1, pointerEvents: mapMode ? 'none' : 'auto', transition: 'opacity 0.3s ease' }}>
+        <a className="giq-brand" href="/" aria-label="GlobeIQ — home">
+          <span className="giq-brand-mark" aria-hidden="true">🌍</span>
+          <h1 className="giq-brand-text">Globe<b>IQ</b></h1>
+        </a>
+        <div className="giq-actions">
+          <button className="giq-icon-btn" onClick={() => setShowHowToPlay(true)} aria-label="How to play">?</button>
+          <span className="giq-chip is-streak" title="Current win streak">🔥 {currentStreak}</span>
           <button
             type="button"
-            className="atlas-badge"
+            className="giq-chip is-atlas"
             onClick={() => setShowAtlasModal(true)}
             aria-label={`View atlas — ${collectedCountries.length} of 195 countries collected`}
           >🗺️ {collectedCountries.length}/195</button>
@@ -181,23 +185,23 @@ function App() {
             href="https://buymeacoffee.com/globeiq"
             target="_blank"
             rel="noopener noreferrer"
-            className="bmc-header"
+            className="giq-icon-btn giq-support"
             onClick={() => trackEvent('support_clicked')}
+            aria-label="Support GlobeIQ"
           >
-            ☕ Support
+            <span aria-hidden="true">☕</span>
+            <span className="giq-support-label">Support</span>
           </a>
           {user ? (
             <button
+              className="giq-user"
               onClick={() => { if (window.confirm(`Signed in as ${user.email}\n\nSign out of GlobeIQ?`)) signOut() }}
-              style={{ background: 'none', border: '1px solid #ffffff30', borderRadius: 20, padding: '6px 14px', fontSize: 13, color: '#ccc', cursor: 'pointer' }}
+              title={`Signed in as ${user.email}`}
             >
-              {user.email.slice(0, 12)}...
+              {user.email.split('@')[0]}
             </button>
           ) : (
-            <button
-              onClick={() => setShowAuthModal(true)}
-              style={{ background: '#4A90D9', border: 'none', borderRadius: 20, padding: '6px 14px', fontSize: 13, color: '#fff', fontWeight: 600, cursor: 'pointer' }}
-            >
+            <button className="giq-signin" onClick={() => setShowAuthModal(true)}>
               Sign In
             </button>
           )}
@@ -216,7 +220,7 @@ function App() {
               <meta property="og:description" content="Guess the mystery country from 6 hints. Collect all 195 countries in your world atlas. Free to play." />
             </Helmet>
             {!currentCountry ? (
-              <main className="game-area">Loading…</main>
+              <main className="game-area"><div className="loading-state">Spinning up the globe…</div></main>
             ) : (
               <main className={`game-area${mapMode ? ' map-mode-active' : ''}`}>
 
@@ -259,6 +263,7 @@ function App() {
               {/* Win or Loss — show reveal card */}
               {!mapMode && (gameStatus === 'won' || gameStatus === 'lost') && !revealDismissed && (
                 <>
+                  {gameStatus === 'won' && <Confetti />}
                   <RevealCard
                     country={currentCountry}
                     won={gameStatus === 'won'}

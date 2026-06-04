@@ -19,7 +19,11 @@ export default function RevealCard({ country, won, onNext, onDismiss }) {
     <div className="reveal-card" ref={cardRef}>
       <div
         className="reveal-header"
-        style={{ background: won ? theme.primary : '#2a3a4a' }}
+        style={{
+          background: won
+            ? `linear-gradient(150deg, ${theme.primary} 0%, ${theme.background} 135%)`
+            : 'linear-gradient(150deg, #2a3a4a 0%, #141c28 130%)',
+        }}
       >
         {onDismiss && (
           <button
@@ -31,13 +35,14 @@ export default function RevealCard({ country, won, onNext, onDismiss }) {
             ✕ Review hints
           </button>
         )}
-        <div style={{ fontSize: 14, fontWeight: 600, opacity: 0.9 }}>
+        <div className="reveal-eyebrow">
           {won ? '🎉 Correct!' : '😔 Not this time'}
         </div>
         {won
           ? <h2>{country.name}</h2>
           : <h2 style={{ opacity: 0.4, letterSpacing: 4, fontSize: 22 }}>? ? ?</h2>
         }
+        {won && <div className="reveal-flag">{country.flagEmoji}</div>}
       </div>
 
       <div className="facts-grid">
@@ -73,7 +78,7 @@ export default function RevealCard({ country, won, onNext, onDismiss }) {
       <button
         className="next-button"
         onClick={onNext}
-        style={{ background: won ? theme.primary : 'linear-gradient(135deg, #4A90D9, #357ABD)' }}
+        style={{ background: won ? `linear-gradient(135deg, ${theme.primary}, ${theme.background})` : 'linear-gradient(135deg, #4DA3FF, #6366F1)' }}
       >
         {won ? 'Next Country →' : 'Try Another Country →'}
       </button>
