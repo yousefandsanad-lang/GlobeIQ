@@ -394,11 +394,14 @@ function renderCountryHtml(country, prev, next) {
   <meta property="og:title" content="${esc(country.name)} — GlobeIQ" />
   <meta property="og:description" content="${esc(country.knownFor)}. Capital: ${esc(country.capital)}." />
   <meta property="og:url" content="${canonical}" />
-  <meta property="og:image" content="${SITE}/preview.png" />
+  <meta property="og:image" content="${SITE}/og/${slug}.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="${esc(country.name)} on GlobeIQ — capital ${esc(country.capital)}, ${esc(country.continent)}" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${esc(country.name)} — GlobeIQ" />
   <meta name="twitter:description" content="${esc(country.knownFor)}. Capital: ${esc(country.capital)}." />
-  <meta name="twitter:image" content="${SITE}/preview.png" />
+  <meta name="twitter:image" content="${SITE}/og/${slug}.png" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
