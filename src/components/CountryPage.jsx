@@ -72,12 +72,17 @@ export default function CountryPage({ allCountries, collectedCountries }) {
     },
   }
 
+  const ogImage = `${SITE_URL}/og/${slugify(country.name)}.png`
+
+  // 3-item breadcrumb (GlobeIQ → Countries → Country) — kept identical to the
+  // prerendered page so hydration doesn't change the structured data.
   const breadcrumbSchema = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'GlobeIQ', item: SITE_URL },
-      { '@type': 'ListItem', position: 2, name: country.name, item: canonical },
+      { '@type': 'ListItem', position: 2, name: 'Countries', item: `${SITE_URL}/countries` },
+      { '@type': 'ListItem', position: 3, name: country.name, item: canonical },
     ],
   }
 
@@ -91,11 +96,13 @@ export default function CountryPage({ allCountries, collectedCountries }) {
         <meta property="og:title" content={`${country.name} — GlobeIQ`} />
         <meta property="og:description" content={ogDescription} />
         <meta property="og:url" content={canonical} />
-        <meta property="og:image" content={`${SITE_URL}/preview.png`} />
+        <meta property="og:image" content={ogImage} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={`${country.name} — GlobeIQ`} />
         <meta name="twitter:description" content={ogDescription} />
-        <meta name="twitter:image" content={`${SITE_URL}/preview.png`} />
+        <meta name="twitter:image" content={ogImage} />
         <script type="application/ld+json">{JSON.stringify(placeSchema)}</script>
         <script type="application/ld+json">{JSON.stringify(breadcrumbSchema)}</script>
       </Helmet>

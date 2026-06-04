@@ -50,23 +50,52 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
 
-    <!-- Structured Data (helps Google understand this is a game) -->
+    <!-- Structured Data (helps Google understand the brand + game) -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "GlobeIQ",
-      "url": "https://globeiq.app",
-      "description": "Guess the mystery country from 6 progressive hints. Build your personal world atlas as you discover all 195 countries.",
-      "applicationCategory": "GameApplication",
-      "genre": "Educational",
-      "operatingSystem": "Web",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "inLanguage": "en"
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://globeiq.app/#website",
+          "url": "https://globeiq.app/",
+          "name": "GlobeIQ",
+          "description": "A free daily geography guessing game. Identify the mystery country from six progressive hints and collect all 195 in your world atlas.",
+          "publisher": { "@id": "https://globeiq.app/#organization" },
+          "inLanguage": "en"
+        },
+        {
+          "@type": "Organization",
+          "@id": "https://globeiq.app/#organization",
+          "name": "GlobeIQ",
+          "url": "https://globeiq.app/",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://globeiq.app/favicon.svg"
+          }
+        },
+        {
+          "@type": "VideoGame",
+          "@id": "https://globeiq.app/#game",
+          "name": "GlobeIQ",
+          "url": "https://globeiq.app/",
+          "description": "Guess the mystery country from six progressive hints — silhouette, climate, borders, region, capital, and flag. Build your personal world atlas as you discover all 195 countries.",
+          "genre": ["Educational", "Geography", "Puzzle"],
+          "applicationCategory": "GameApplication",
+          "gamePlatform": "Web Browser",
+          "operatingSystem": "Web",
+          "playMode": "SinglePlayer",
+          "inLanguage": "en",
+          "image": "https://globeiq.app/preview.png",
+          "author": { "@id": "https://globeiq.app/#organization" },
+          "publisher": { "@id": "https://globeiq.app/#organization" },
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          }
+        }
+      ]
     }
     </script>
 
