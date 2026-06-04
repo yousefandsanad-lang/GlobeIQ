@@ -111,18 +111,24 @@ function App() {
     nextCountry()
   }
 
+  const [shareCopied, setShareCopied] = useState(false)
+  const shareCopiedTimer = useRef(null)
+  useEffect(() => () => clearTimeout(shareCopiedTimer.current), [])
+
   async function handleShare() {
-    if (!currentCountry || gameStatus !== 'won') return
-    const text = generateShareText(currentCountry, guesses, true)
+    if (!currentCountry || (gameStatus !== 'won' && gameStatus !== 'lost')) return
+    const won = gameStatus === 'won'
+    const text = generateShareText(currentCountry, guesses, won, currentStreak)
     if (!text) return
+    const track = method => trackEvent('share_result', {
+      result: gameStatus,
+      guesses_taken: guesses.length,
+      method,
+    })
     if (navigator.share) {
       try {
         await navigator.share({ text })
-        trackEvent('share_result', {
-          country: currentCountry.name,
-          guesses_taken: guesses.length,
-          method: 'web_share',
-        })
+        track('web_share')
         return
       } catch (err) {
         if (err.name === 'AbortError') return
@@ -130,14 +136,12 @@ function App() {
     }
     try {
       await navigator.clipboard.writeText(text)
-      trackEvent('share_result', {
-        country: currentCountry.name,
-        guesses_taken: guesses.length,
-        method: 'clipboard',
-      })
-      alert('Copied to clipboard!')
+      track('clipboard')
+      setShareCopied(true)
+      clearTimeout(shareCopiedTimer.current)
+      shareCopiedTimer.current = setTimeout(() => setShareCopied(false), 2000)
     } catch {
-      alert('Could not copy. Try selecting the text manually.')
+      window.prompt('Copy your result:', text)
     }
   }
 
@@ -270,11 +274,13 @@ function App() {
                     onNext={handleNext}
                     onDismiss={() => setRevealDismissed(true)}
                   />
-                  {gameStatus === 'won' && (
-                    <button className="share-button" onClick={handleShare}>
-                      📋 Share Result
-                    </button>
-                  )}
+                  <button className="share-button" onClick={handleShare}>
+                    {shareCopied
+                      ? '✓ Copied to clipboard!'
+                      : gameStatus === 'won'
+                        ? '📋 Share your result'
+                        : '📋 Share & challenge a friend'}
+                  </button>
                 </>
               )}
 
