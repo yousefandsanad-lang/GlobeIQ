@@ -18,6 +18,51 @@ Dev mode: https://globe-iq-one.vercel.app?dev
 
 ---
 
+## Session recap — 2026-06-03 (full overhaul: visual / SEO / security / perf)
+
+A broad quality pass across the whole site. All shipped to `main`.
+
+- **Resilience fix:** `createClient('', '')` used to throw at module load and
+  white-screen the entire app when Supabase env vars were absent (local dev).
+  `supabase.js` now falls back to a no-op stub → game runs anonymous-only.
+- **Security:** `vercel.json` gained HSTS, X-Frame-Options, X-Content-Type-Options,
+  Referrer-Policy, Permissions-Policy (all enforcing) + a **report-only CSP**
+  (ready to flip to enforcing once AdSense domains are confirmed). `.gitignore`
+  now excludes `.env*.local` (held a live VERCEL_OIDC_TOKEN) and `.vercel/`.
+  Prerender JSON-LD/flag output hardened through the esc() boundary.
+- **Bug:** Côte d'Ivoire & São Tomé soft-404'd — prerender's local slugify
+  diverged from `src/utils/slug.js`. Now imports the canonical slugify.
+- **Bold visual redesign ("Aurora / Night-Globe"):** new design-token system in
+  `main.css`, Space Grotesk + Inter, aurora accents, glassy surfaces, dramatic
+  silhouette hero, vivid CTA, confetti on win (`Confetti.jsx`), restyled reveal
+  card. **Fixed the mobile header overflow** (action cluster now reflows). The
+  prerendered country/hub pages + homepage SEO block got the same identity.
+- **Share card:** rewrote `shareCard.js` — spoiler-free emoji grid (no country
+  name/flag), streak flex, losses shareable, inline "Copied!" feedback.
+  NOTE: the daily-puzzle pivot was considered but the owner chose to KEEP the
+  endless/collect model — so no "Day N", just a cleaner flex.
+- **OG images:** `preview.png` 404'd everywhere. New `scripts/generate-og.mjs`
+  (satori + resvg, fonts from @fontsource devDeps) renders `dist/preview.png` +
+  195 per-country `dist/og/{slug}.png` at build time. Wired into `npm run build`;
+  country pages point og:image at their own card. Images live in dist (not
+  committed), regenerate each deploy.
+- **Performance:** initial gzipped JS **459 KB → ~192 KB**. The 50m TopoJSON is
+  no longer bundled — served from `public/data/countries-50m.json` and fetched
+  once at runtime (`src/utils/topology.js`, warmed in `main.jsx`). Route +
+  modals lazy-loaded; `manualChunks` vendor split.
+- **Structured data:** homepage @graph (WebSite + Organization + VideoGame);
+  FAQPage on /how-to-play; CountryPage breadcrumb aligned to prerender (3-item).
+
+**Still open / follow-ups:**
+- Flip CSP from report-only to enforcing after verifying AdSense renders under
+  it in production (check the browser console for CSP violations first).
+- Consider lazy-loading the Supabase client (~53 KB gzip, still eager) — skipped
+  this pass because sign-in can't be tested without live Supabase creds locally.
+- Verify Supabase RLS is actually applied in the live project (schema.sql is a
+  manual run-this script; if skipped, atlas/streak rows are world-read/writable).
+
+---
+
 ## Current status (as of 2026-05-16)
 
 ### Open right now
