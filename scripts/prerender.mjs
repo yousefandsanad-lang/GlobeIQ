@@ -14,6 +14,7 @@ import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync, readdirSync
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 import { default as countries } from '../src/data/countries.js'
+import { slugify } from '../src/utils/slug.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = resolve(__dirname, '..')
@@ -23,14 +24,22 @@ const enrichmentRaw = JSON.parse(readFileSync(resolve(root, 'src/data/countries-
 
 const SITE = 'https://globeiq.app'
 
-function slugify(name) {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
-}
+// slugify is imported from src/utils/slug.js so prerendered filenames, the
+// in-app React Router links, the sitemap, and every canonical URL all agree.
+// (A divergent local copy here previously emitted "c-te-d-ivoire.html" while
+// the rest of the app linked to "cote-divoire", soft-404ing those pages.)
 
 function esc(s) {
   return String(s).replace(/[&<>"']/g, c => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
   }[c]))
+}
+
+// Safely serialise an object into a <script type="application/ld+json"> block.
+// JSON.stringify does NOT escape "<", so a value containing "</script>" could
+// otherwise break out of the block. Escaping "<" keeps esc() a true boundary.
+function jsonLd(obj) {
+  return JSON.stringify(obj).replace(/</g, '\\u003c')
 }
 
 const NAME_BY_CCA3 = (() => {
@@ -385,8 +394,8 @@ function renderCountryHtml(country, prev, next) {
   <meta name="twitter:description" content="${esc(country.knownFor)}. Capital: ${esc(country.capital)}." />
   <meta name="twitter:image" content="${SITE}/preview.png" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-  <script type="application/ld+json">${JSON.stringify(placeSchema)}</script>
-  <script type="application/ld+json">${JSON.stringify(breadcrumbSchema)}</script>
+  <script type="application/ld+json">${jsonLd(placeSchema)}</script>
+  <script type="application/ld+json">${jsonLd(breadcrumbSchema)}</script>
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6930930871941912" crossorigin="anonymous"></script>
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-8PQZKTB7KJ"></script>
   <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-8PQZKTB7KJ');</script>
@@ -400,7 +409,7 @@ function renderCountryHtml(country, prev, next) {
 </header>
 
 <main class="ssg">
-  <div class="flag" aria-hidden="true">${country.flagEmoji}</div>
+  <div class="flag" aria-hidden="true">${esc(country.flagEmoji)}</div>
   <h1>${esc(country.name)}</h1>
   <div class="meta">${esc(country.continent)} · ${esc(country.population)}</div>
 
@@ -463,7 +472,7 @@ function renderIndexHub(sorted) {
       <h2>${esc(cont)} (${byContinent[cont].length} countries)</h2>
       <p>Browse every sovereign nation grouped under ${esc(cont)} on GlobeIQ. Each link opens a dedicated page with that country's capital, official name, languages, currency, area, population, time zones, and more.</p>
       <ul class="grid">
-        ${byContinent[cont].map(c => `<li><a href="/countries/${slugify(c.name)}"><span class="flag-em">${c.flagEmoji}</span> ${esc(c.name)}</a></li>`).join('')}
+        ${byContinent[cont].map(c => `<li><a href="/countries/${slugify(c.name)}"><span class="flag-em">${esc(c.flagEmoji)}</span> ${esc(c.name)}</a></li>`).join('')}
       </ul>
     </section>
   `).join('')
@@ -525,7 +534,7 @@ function renderHomepageSeoBlock(sorted) {
       <section class="seo-continent">
         <h3>${esc(cont)} <span class="seo-count">(${byContinent[cont].length})</span></h3>
         <ul class="seo-grid">
-          ${byContinent[cont].map(c => `<li><a href="/countries/${slugify(c.name)}"><span class="seo-flag">${c.flagEmoji}</span> ${esc(c.name)}</a></li>`).join('')}
+          ${byContinent[cont].map(c => `<li><a href="/countries/${slugify(c.name)}"><span class="seo-flag">${esc(c.flagEmoji)}</span> ${esc(c.name)}</a></li>`).join('')}
         </ul>
       </section>
   `).join('')
