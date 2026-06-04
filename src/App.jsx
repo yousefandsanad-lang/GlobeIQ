@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, lazy, Suspense } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import useGameLogic from './hooks/useGameLogic'
@@ -11,12 +11,15 @@ import HintPanel from './components/HintPanel'
 import GuessInput from './components/GuessInput'
 import RevealCard from './components/RevealCard'
 import WorldMap from './components/WorldMap'
-import HowToPlay from './components/HowToPlay'
-import AuthModal from './components/AuthModal'
-import AtlasModal from './components/AtlasModal'
-import AtlasComplete from './components/AtlasComplete'
-import CountryPage from './components/CountryPage'
 import Confetti from './components/Confetti'
+
+// Lazy-loaded: route + on-demand modals. Keeps them (and their deps — e.g. the
+// 36 KB enrichment JSON behind CountryPage) out of the initial bundle.
+const HowToPlay = lazy(() => import('./components/HowToPlay'))
+const AuthModal = lazy(() => import('./components/AuthModal'))
+const AtlasModal = lazy(() => import('./components/AtlasModal'))
+const AtlasComplete = lazy(() => import('./components/AtlasComplete'))
+const CountryPage = lazy(() => import('./components/CountryPage'))
 import { generateShareText } from './utils/shareCard'
 import { playCorrect, playWrong, playReveal } from './utils/sound'
 import { trackEvent } from './utils/analytics'
@@ -212,6 +215,7 @@ function App() {
         </div>
       </header>
 
+      <Suspense fallback={<main className="game-area"><div className="loading-state">Loading…</div></main>}>
       <Routes>
         <Route path="/" element={
           <>
@@ -308,25 +312,28 @@ function App() {
           />
         } />
       </Routes>
+      </Suspense>
 
-      {showHowToPlay && <HowToPlay onClose={closeHowToPlay} />}
-      {showAuthModal && (
-        <AuthModal
-          onClose={() => setShowAuthModal(false)}
-          signInWithGoogle={signInWithGoogle}
-          signInWithMagicLink={signInWithMagicLink}
-        />
-      )}
-      {showAtlasModal && (
-        <AtlasModal
-          collectedCountries={collectedCountries}
-          allCountries={countries}
-          onClose={() => setShowAtlasModal(false)}
-        />
-      )}
-      {showAtlasComplete && (
-        <AtlasComplete onContinue={() => setShowAtlasComplete(false)} />
-      )}
+      <Suspense fallback={null}>
+        {showHowToPlay && <HowToPlay onClose={closeHowToPlay} />}
+        {showAuthModal && (
+          <AuthModal
+            onClose={() => setShowAuthModal(false)}
+            signInWithGoogle={signInWithGoogle}
+            signInWithMagicLink={signInWithMagicLink}
+          />
+        )}
+        {showAtlasModal && (
+          <AtlasModal
+            collectedCountries={collectedCountries}
+            allCountries={countries}
+            onClose={() => setShowAtlasModal(false)}
+          />
+        )}
+        {showAtlasComplete && (
+          <AtlasComplete onContinue={() => setShowAtlasComplete(false)} />
+        )}
+      </Suspense>
 
       <footer className="globeiq-footer">
         <a href="/about">About</a>

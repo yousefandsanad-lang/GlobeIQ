@@ -1,11 +1,9 @@
-import { useState } from 'react'
-import { feature } from 'topojson-client'
+import { useState, useEffect } from 'react'
 import { geoNaturalEarth1, geoPath } from 'd3-geo'
-import worldData from 'world-atlas/countries-50m.json'
 import countries from '../data/countries'
 import { getContinentTheme } from '../utils/continentTheme'
+import { loadWorldTopology, getCachedTopology } from '../utils/topology'
 
-const featureCollection = feature(worldData, worldData.objects.countries)
 const projection = geoNaturalEarth1().scale(220).translate([500, 270])
 const pathGen = geoPath(projection)
 
@@ -32,6 +30,17 @@ export default function WorldMap({ collectedCountries = [], currentCountryId, al
     })
   }
   const [hoveredCountry, setHoveredCountry] = useState(null)
+  const [featureCollection, setFeatureCollection] = useState(() => getCachedTopology())
+
+  useEffect(() => {
+    if (featureCollection) return
+    let alive = true
+    loadWorldTopology().then(fc => { if (alive) setFeatureCollection(fc) }).catch(() => {})
+    return () => { alive = false }
+  }, [featureCollection])
+
+  // Decorative background — render nothing until the topology is ready.
+  if (!featureCollection) return null
 
   return (
     <div

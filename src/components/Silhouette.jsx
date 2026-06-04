@@ -1,10 +1,8 @@
-import { feature } from 'topojson-client'
+import { useState, useEffect } from 'react'
 import { geoNaturalEarth1, geoPath, geoArea } from 'd3-geo'
-import worldData from 'world-atlas/countries-50m.json'
 import { getContinentTheme } from '../utils/continentTheme'
 import gameCountries from '../data/countries'
-
-const topoCountries = feature(worldData, worldData.objects.countries)
+import { loadWorldTopology, getCachedTopology } from '../utils/topology'
 
 const SPIN_CSS = `
 @keyframes globeSpin {
@@ -14,7 +12,7 @@ const SPIN_CSS = `
 .micro-globe {
   display: inline-block;
   animation: globeSpin 3s linear infinite;
-  font-size: 40px;
+  font-size: 44px;
   line-height: 1;
 }
 `
@@ -35,55 +33,67 @@ function getMicroHint(country) {
   return "One of the world's smallest nations"
 }
 
-export default function Silhouette({ continent, revealed, countryName, countryId, flagEmoji }) {
-  const theme = getContinentTheme(continent)
-
-  const gameCountry = gameCountries.find(c => String(c.id) === String(countryId))
-
+// Project the country's geometry into a centred 200×200 SVG path string.
+// Returns null if the country can't be rendered (too small / missing geometry).
+function computePathData(topoCountries, countryId) {
   const countryFeature = topoCountries.features.find(
     f => String(f.id) === String(countryId)
   )
+  if (!countryFeature) return null
 
-  let pathData = null
-  if (countryFeature) {
-    try {
-      // For countries with overseas territories (France, USA, etc.), fit and
-      // center based on the largest polygon only so the main landmass fills
-      // the box. The full feature is still rendered; small territories get
-      // projected off-screen and clipped by the SVG viewport.
-      let featureForFitting = countryFeature
-      if (countryFeature.geometry.type === 'MultiPolygon') {
-        const largestCoords = countryFeature.geometry.coordinates.reduce((best, poly) => {
-          const f = { type: 'Feature', geometry: { type: 'Polygon', coordinates: poly }, properties: {} }
-          return geoArea(f) > geoArea({ type: 'Feature', geometry: { type: 'Polygon', coordinates: best }, properties: {} })
-            ? poly : best
-        }, countryFeature.geometry.coordinates[0])
-        featureForFitting = { type: 'Feature', geometry: { type: 'Polygon', coordinates: largestCoords }, properties: {} }
-      }
-
-      const projection = geoNaturalEarth1()
-        .fitExtent([[25, 25], [175, 175]], featureForFitting)
-
-      const centroid = geoPath().projection(projection).centroid(featureForFitting)
-      const translate = projection.translate()
-      projection.translate([
-        translate[0] + (100 - centroid[0]),
-        translate[1] + (100 - centroid[1]),
-      ])
-
-      const pathMaker = geoPath().projection(projection)
-      const renderedArea = pathMaker.area(featureForFitting)
-      if (renderedArea >= 100) {
-        pathData = pathMaker(countryFeature)
-      }
-    } catch (e) {
-      pathData = null
+  try {
+    // For countries with overseas territories (France, USA, etc.), fit and
+    // center based on the largest polygon only so the main landmass fills
+    // the box. The full feature is still rendered; small territories get
+    // projected off-screen and clipped by the SVG viewport.
+    let featureForFitting = countryFeature
+    if (countryFeature.geometry.type === 'MultiPolygon') {
+      const largestCoords = countryFeature.geometry.coordinates.reduce((best, poly) => {
+        const f = { type: 'Feature', geometry: { type: 'Polygon', coordinates: poly }, properties: {} }
+        return geoArea(f) > geoArea({ type: 'Feature', geometry: { type: 'Polygon', coordinates: best }, properties: {} })
+          ? poly : best
+      }, countryFeature.geometry.coordinates[0])
+      featureForFitting = { type: 'Feature', geometry: { type: 'Polygon', coordinates: largestCoords }, properties: {} }
     }
+
+    const projection = geoNaturalEarth1()
+      .fitExtent([[25, 25], [175, 175]], featureForFitting)
+
+    const centroid = geoPath().projection(projection).centroid(featureForFitting)
+    const translate = projection.translate()
+    projection.translate([
+      translate[0] + (100 - centroid[0]),
+      translate[1] + (100 - centroid[1]),
+    ])
+
+    const pathMaker = geoPath().projection(projection)
+    const renderedArea = pathMaker.area(featureForFitting)
+    if (renderedArea >= 100) {
+      return pathMaker(countryFeature)
+    }
+  } catch (e) {
+    return null
   }
+  return null
+}
 
+export default function Silhouette({ continent, revealed, countryName, countryId, flagEmoji }) {
+  const theme = getContinentTheme(continent)
+  const [topo, setTopo] = useState(() => getCachedTopology())
+
+  useEffect(() => {
+    if (topo) return
+    let alive = true
+    loadWorldTopology().then(t => { if (alive) setTopo(t) }).catch(() => {})
+    return () => { alive = false }
+  }, [topo])
+
+  const gameCountry = gameCountries.find(c => String(c.id) === String(countryId))
+
+  const loading = !topo
+  const pathData = topo ? computePathData(topo, countryId) : null
   const isValidPath = pathData && pathData.length > 10 && pathData !== 'M0,0Z' && pathData !== ''
-
-  const isMissing = !isValidPath
+  const isMissing = !loading && !isValidPath
 
   return (
     <>
@@ -109,7 +119,9 @@ export default function Silhouette({ continent, revealed, countryName, countryId
           willChange: 'transform',
         }}
       >
-        {isMissing ? (
+        {loading ? (
+          <span className="micro-globe" role="img" aria-label="Loading map">🌍</span>
+        ) : isMissing ? (
           <>
             <span className="micro-globe">🌍</span>
             <div style={{
