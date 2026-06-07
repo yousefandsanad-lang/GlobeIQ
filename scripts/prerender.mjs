@@ -11,6 +11,7 @@
 // see real content while in-app React-Router navigation still works.
 
 import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync, readdirSync, statSync } from 'node:fs'
+import { execSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 import { default as countries } from '../src/data/countries.js'
@@ -23,6 +24,35 @@ const dist = resolve(root, 'dist')
 const enrichmentRaw = JSON.parse(readFileSync(resolve(root, 'src/data/countries-enrichment.json'), 'utf-8'))
 
 const SITE = 'https://globeiq.app'
+
+// Build date (UTC, YYYY-MM-DD) — used as the sitemap <lastmod> fallback and for
+// the homepage, which genuinely changes every day (new daily puzzle).
+const TODAY = new Date().toISOString().slice(0, 10)
+
+// Honest <lastmod>: the date a source file was last committed, so a page's
+// lastmod only advances when its underlying content actually changed — not on
+// every unrelated deploy (which makes Google distrust and ignore lastmod).
+// Falls back to the build date if git history is unavailable (e.g. a shallow
+// checkout that doesn't reach the file's last commit).
+function gitDate(relPath) {
+  try {
+    const out = execSync(`git log -1 --format=%cs -- "${relPath}"`, {
+      cwd: root, encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim()
+    return /^\d{4}-\d{2}-\d{2}$/.test(out) ? out : TODAY
+  } catch {
+    return TODAY
+  }
+}
+
+// Country reference pages are regenerated from the country data + this script's
+// prose builders, so their content date is the most recent change among those.
+// (Lexicographic max works for ISO dates.)
+const CONTENT_DATE = [
+  gitDate('src/data/countries.js'),
+  gitDate('src/data/countries-enrichment.json'),
+  gitDate('scripts/prerender.mjs'),
+].sort().at(-1)
 
 // slugify is imported from src/utils/slug.js so prerendered filenames, the
 // in-app React Router links, the sitemap, and every canonical URL all agree.
@@ -533,6 +563,46 @@ function renderIndexHub(sorted) {
 `
 }
 
+// ─── Sitemap ────────────────────────────────────────────────────────────────
+// Generated here (rather than hand-maintained in public/) so the URL set is
+// always exactly the pages we actually ship — the homepage, the /countries
+// hub, the five content pages, and one entry per sovereign nation — and can
+// never drift out of sync with the country data or slugify().
+
+function renderSitemap(sorted) {
+  const staticPages = [
+    { path: '', changefreq: 'daily', priority: '1.0', lastmod: TODAY },
+    { path: 'countries', changefreq: 'weekly', priority: '0.8', lastmod: CONTENT_DATE },
+    { path: 'how-to-play', changefreq: 'monthly', priority: '0.6', lastmod: gitDate('public/how-to-play.html') },
+    { path: 'about', changefreq: 'monthly', priority: '0.5', lastmod: gitDate('public/about.html') },
+    { path: 'contact', changefreq: 'yearly', priority: '0.3', lastmod: gitDate('public/contact.html') },
+    { path: 'privacy', changefreq: 'yearly', priority: '0.3', lastmod: gitDate('public/privacy.html') },
+    { path: 'terms', changefreq: 'yearly', priority: '0.3', lastmod: gitDate('public/terms.html') },
+  ]
+
+  const entries = [
+    ...staticPages.map(p => ({ loc: `${SITE}/${p.path}`, ...p })),
+    ...sorted.map(c => ({
+      loc: `${SITE}/countries/${slugify(c.name)}`,
+      lastmod: CONTENT_DATE, changefreq: 'monthly', priority: '0.7',
+    })),
+  ]
+
+  const urls = entries.map(e => `  <url>
+    <loc>${e.loc}</loc>
+    <lastmod>${e.lastmod}</lastmod>
+    <changefreq>${e.changefreq}</changefreq>
+    <priority>${e.priority}</priority>
+  </url>`).join('\n')
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated at build time by scripts/prerender.mjs — do not edit by hand. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls}
+</urlset>
+`
+}
+
 // ─── Homepage SEO content injection ─────────────────────────────────────────
 
 function renderHomepageSeoBlock(sorted) {
@@ -669,9 +739,13 @@ for (let i = 0; i < sorted.length; i++) {
 
 writeFileSync(resolve(dist, 'countries', 'index.html'), renderIndexHub(sorted))
 
+// Generate the sitemap from the same data the pages are built from, so it is
+// always in sync with what actually ships.
+writeFileSync(resolve(dist, 'sitemap.xml'), renderSitemap(sorted))
+
 // Inject the rich SEO block into dist/index.html for the homepage.
 const indexShell = readFileSync(resolve(dist, 'index.html'), 'utf-8')
 const enrichedIndex = injectHomepageSeo(indexShell, sorted)
 writeFileSync(resolve(dist, 'index.html'), enrichedIndex)
 
-console.log(`Pre-rendered ${count} country pages + 1 index hub + beefed homepage at dist/`)
+console.log(`Pre-rendered ${count} country pages + 1 index hub + sitemap (${count + 7} urls) + beefed homepage at dist/`)

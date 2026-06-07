@@ -52,7 +52,9 @@ export default function CountryPage({ allCountries, collectedCountries }) {
   const theme = getContinentTheme(country.continent)
   const enrichment = getEnrichment(country)
   const canonical = `${SITE_URL}/countries/${slugify(country.name)}`
-  const title = `${country.name} — Flag, Capital, Region & Facts | GlobeIQ`
+  // Keep this in sync with the prerendered title in scripts/prerender.mjs so a
+  // page reached via SPA navigation matches the crawler-indexed static HTML.
+  const title = `${country.name} — Capital, Flag, Geography & Country Facts | GlobeIQ`
   const description = `${country.name}: capital ${country.capital}, in ${country.continent} (${country.region}). ${country.knownFor}. Play GlobeIQ to collect all 195 countries.`
   const ogDescription = `${country.knownFor}. Capital: ${country.capital}.`
 
