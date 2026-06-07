@@ -18,6 +18,41 @@ Dev mode: https://globe-iq-one.vercel.app?dev
 
 ---
 
+## Session recap — 2026-06-07 (AdSense rejected again → Adsterra pivot)
+
+AdSense re-reviewed globeiq.app and **rejected it a second time** with the same
+reason ("Low value content" — confirmed in the console, not just the generic
+email). Diagnosis: the site is a **game** with **195 templated country pages** —
+the two patterns AdSense most reliably rejects, and more templated/AI text would
+make it worse (Google penalizes scaled content). Decision: **stop chasing
+AdSense, pivot to a game-friendly web ad network.**
+
+Researched the 2026 landscape. Premium game networks (Ezoic 250k/mo, Playwire
+~500k, AdinPlay enterprise, Raptive 25k, Snigel/Setupad 100k) are OUT until
+GlobeIQ has traffic. Realistic now: **Adsterra** (no minimum, approves games,
+instant), Media.net (cleaner but quality-reviewed), Monetag. Owner chose
+**Adsterra** (web-only; no mobile app, so AdMob N/A).
+
+Shipped the pivot (commit 7253e57): removed AdSense everywhere, AdSlot.jsx now
+injects Adsterra banner/native, config via VITE_ADSTERRA_* env (dormant until
+keys set), CSP swapped to Adsterra domains, ads.txt reset to Adsterra template.
+
+**Owner activation TODO (Adsterra):**
+1. Sign up at adsterra.com; create units with **Banner / Native Banner only**
+   (NOT popunder/social bar/push — they wreck the game UX).
+2. Set `VITE_ADSTERRA_{BETWEEN,ATLAS,COUNTRY}_{KEY,SRC,TYPE,W,H}` env vars in
+   Vercel (see src/utils/adSlots.js for the full list). Redeploy.
+3. Paste Adsterra's ads.txt line into public/ads.txt.
+4. After deploy, open the site + a country page, check the console for "Refused
+   to load … Content Security Policy". If Adsterra's serving host isn't already
+   allowlisted, add it to script/img/frame/connect-src in vercel.json.
+- Optional later: rewarded video ("watch ad → reveal a hint / extra guess") via
+  GameDistribution/GameMonetize — game-native, opt-in, but needs emailing them
+  to self-host on globeiq.app. AdGate.jsx is an unused simulated-rewarded UI
+  that could be wired to a real rewarded SDK.
+
+---
+
 ## Session recap — 2026-06-03 (full overhaul: visual / SEO / security / perf)
 
 A broad quality pass across the whole site. All shipped to `main`.
