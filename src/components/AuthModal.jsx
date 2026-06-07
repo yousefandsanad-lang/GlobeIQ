@@ -37,6 +37,19 @@ export default function AuthModal({ onClose, signInWithGoogle, signInWithMagicLi
     }
   }
 
+  async function handleGoogle() {
+    setBusy(true)
+    setError('')
+    try {
+      // On success this redirects away; on failure (e.g. Supabase paused) it
+      // throws and we surface a friendly message instead of a browser error page.
+      await signInWithGoogle()
+    } catch (err) {
+      setError(err.message || 'Sign-in is temporarily unavailable. Try again later.')
+      setBusy(false)
+    }
+  }
+
   return createPortal(
     <div
       onClick={onClose}
@@ -97,7 +110,8 @@ export default function AuthModal({ onClose, signInWithGoogle, signInWithMagicLi
 
         {/* Google */}
         <button
-          onClick={signInWithGoogle}
+          onClick={handleGoogle}
+          disabled={busy}
           style={{
             width: '100%',
             display: 'flex',
@@ -111,13 +125,20 @@ export default function AuthModal({ onClose, signInWithGoogle, signInWithMagicLi
             color: '#111',
             fontSize: 14,
             fontWeight: 600,
-            cursor: 'pointer',
-            marginBottom: 16,
+            cursor: busy ? 'not-allowed' : 'pointer',
+            opacity: busy ? 0.7 : 1,
+            marginBottom: 12,
           }}
         >
           <GoogleG />
-          Continue with Google
+          {busy ? 'Connecting…' : 'Continue with Google'}
         </button>
+
+        {error && (
+          <div style={{ color: '#E85D4A', fontSize: 12.5, lineHeight: 1.5, marginBottom: 12, textAlign: 'center' }}>
+            {error}
+          </div>
+        )}
 
         {/* Divider */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
@@ -159,9 +180,6 @@ export default function AuthModal({ onClose, signInWithGoogle, signInWithMagicLi
                 marginBottom: 10,
               }}
             />
-            {error && (
-              <div style={{ color: '#E85D4A', fontSize: 12, marginBottom: 8 }}>{error}</div>
-            )}
             <button
               type="submit"
               disabled={busy}

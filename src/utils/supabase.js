@@ -54,6 +54,24 @@ function makeStub() {
   }
 }
 
+// Quick liveness probe before the Google OAuth redirect. supabase-js OAuth
+// does a full-page navigation to {url}/auth/v1/authorize, so if the project is
+// paused/unreachable the browser lands on a raw DNS error page. We pre-flight
+// the auth health endpoint (no-cors: we only care that the host responds) so
+// the UI can show a friendly message instead. Returns false if unconfigured.
+export async function isSupabaseReachable(timeoutMs = 3500) {
+  if (!isSupabaseConfigured) return false
+  try {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), timeoutMs)
+    await fetch(`${url}/auth/v1/health`, { mode: 'no-cors', cache: 'no-store', signal: controller.signal })
+    clearTimeout(timer)
+    return true // any response (even opaque/401) means the host is up
+  } catch {
+    return false // network error / DNS failure / timeout
+  }
+}
+
 const supabase = isSupabaseConfigured ? createClient(url, key) : makeStub()
 
 if (!isSupabaseConfigured && import.meta.env.DEV) {

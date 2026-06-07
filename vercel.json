@@ -12,6 +12,9 @@
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ],
+  "crons": [
+    { "path": "/api/keep-warm", "schedule": "0 6 * * *" }
+  ],
   "headers": [
     {
       "source": "/(.*)",

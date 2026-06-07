@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import supabase from '../utils/supabase'
+import supabase, { isSupabaseReachable } from '../utils/supabase'
 import { trackEvent } from '../utils/analytics'
 
 export default function useAuth() {
@@ -24,6 +24,12 @@ export default function useAuth() {
   }, [])
 
   async function signInWithGoogle() {
+    // Pre-flight: OAuth is a full-page redirect, so if Supabase is paused/down
+    // the user would hit a raw browser error page. Fail gracefully instead.
+    const reachable = await isSupabaseReachable()
+    if (!reachable) {
+      throw new Error('Sign-in is temporarily unavailable. Your progress is saved on this device — please try again in a bit.')
+    }
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: window.location.origin },
