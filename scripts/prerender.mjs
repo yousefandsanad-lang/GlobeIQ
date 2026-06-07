@@ -674,10 +674,10 @@ function renderHomepageSeoBlock(sorted) {
     <p>GlobeIQ is built and maintained as an independent project. All country facts are sourced from open public datasets (primarily REST Countries v3.1, sourced from the CIA World Factbook and similar public-domain references) and curated for clarity. The game's silhouettes are generated from the open-source <em>world-atlas</em> TopoJSON dataset. If you spot an inaccuracy or want to suggest a feature, see our <a href="/contact" style="color:#4DA3FF;text-decoration:none">contact page</a> — we read every message.</p>
     <p>For more detail on how the game works and how data is handled, see the dedicated <a href="/how-to-play" style="color:#4DA3FF;text-decoration:none">How to play</a>, <a href="/about" style="color:#4DA3FF;text-decoration:none">About</a>, <a href="/privacy" style="color:#4DA3FF;text-decoration:none">Privacy</a>, and <a href="/terms" style="color:#4DA3FF;text-decoration:none">Terms</a> pages.</p>
 
-    <a class="seo-cta" href="/">▶ Play today's puzzle</a>
+    <a class="seo-cta" href="#globeiq-app">▶ Play today's puzzle</a>
 
     <div class="seo-footer">
-      <a href="/">Play</a> · <a href="/countries">All countries</a> · <a href="/about">About</a> · <a href="/how-to-play">How to play</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="/contact">Contact</a>
+      <a href="#globeiq-app">Play</a> · <a href="/countries">All countries</a> · <a href="/about">About</a> · <a href="/how-to-play">How to play</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="/contact">Contact</a>
     </div>
   </div>
 </div>

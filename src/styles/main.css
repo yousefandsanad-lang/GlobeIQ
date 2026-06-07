@@ -46,6 +46,11 @@
 }
 
 /* ===== Global ===== */
+/* Smooth in-page anchor scrolling (e.g. the homepage "Play today's puzzle" CTA
+   scrolls up to #globeiq-app instead of reloading). Reduced-motion users get an
+   instant jump via the prefers-reduced-motion override below. */
+html { scroll-behavior: smooth; }
+
 body {
   background:
     radial-gradient(1100px 560px at 12% -12%, rgba(56, 189, 248, 0.12), transparent 60%),
