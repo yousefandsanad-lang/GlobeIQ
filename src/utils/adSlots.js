@@ -1,51 +1,47 @@
 // ── Adsterra ad configuration ────────────────────────────────────────────────
 //
-// GlobeIQ monetizes via Adsterra (AdSense rejected the site as a game/"low value
-// content"; Adsterra approves games and has no traffic minimum).
+// GlobeIQ monetizes via Adsterra (AdSense rejected the site as a game / "low
+// value content"; Adsterra approves games). These keys/URLs are PUBLIC — they
+// ship in client code, exactly like the old AdSense slot IDs — so they're
+// hardcoded here. Each can be overridden with a VITE_ADSTERRA_* env var if you
+// ever rotate units without a code change.
 //
-// ACTIVATION (after you sign up at https://adsterra.com and create ad units):
-//   1. Create units using the BANNER and/or NATIVE BANNER formats ONLY.
-//      Do NOT enable Popunder / Social Bar / Push — they wreck the game UX.
-//   2. Each unit's snippet gives you a `key` and an invoke.js URL (`src`),
-//      e.g. src = "//www.highperformanceformat.com/<key>/invoke.js"
-//           or  "//pl0000000.profitablecpmrate.com/<key>/invoke.js"
-//   3. Set these as Vercel env vars (Project → Settings → Environment Variables),
-//      OR hardcode them below. They are NOT secret (they ship in client code).
-//   4. The CSP in vercel.json already allowlists Adsterra's common serving
-//      domains (*.highperformanceformat.com, *.profitablecpmrate.com,
-//      *.profitableratecpm.com, *.profitabledisplaynetwork.com) across
-//      script-src/img-src/frame-src/connect-src. Adsterra ROTATES domains — if
-//      your snippet's invoke.js host isn't one of those, add it to those four
-//      directives in vercel.json, or the enforced CSP will block the ad.
-//      (Verify after deploy: open the page, check the console for "Refused to
-//      load … Content Security Policy" and add any blocked host.)
+// Units (created in the Adsterra dashboard for globeiq.app, site 5832177):
+//   • Native Banner  → betweenRounds (shown after a win/loss)
+//   • Banner 300x250 → atlasModal   (Atlas modal footer)
+//   • Banner 728x90  → countryPage  (in-app country route)
 //
-// Until a unit has both `key` and `src`, its slot renders nothing (no broken
-// layout, no errors) — so the site is safe to ship before activation.
+// Formats are intentionally BANNER + NATIVE only — no popunder/social-bar/push,
+// to keep the game UX clean.
+//
+// CSP: the serving domains used by these units
+// (pl*.effectivecpmnetwork.com for native, www.highperformanceformat.com for
+// the banners) are allowlisted in vercel.json. If you add a unit whose
+// invoke.js is on a different Adsterra domain, add that host to script-src/
+// img-src/frame-src/connect-src there, or the enforced CSP will block it.
+//
+// A unit with an empty key or src renders nothing (no broken layout).
 
 const env = import.meta.env
 
 export const ADSTERRA = {
-  // Shown after a win/loss, between rounds — the highest-engagement placement.
   betweenRounds: {
-    key: env.VITE_ADSTERRA_BETWEEN_KEY || '',
-    src: env.VITE_ADSTERRA_BETWEEN_SRC || '',
-    type: env.VITE_ADSTERRA_BETWEEN_TYPE || 'native', // 'native' | 'banner'
+    key: env.VITE_ADSTERRA_BETWEEN_KEY || 'a5103adadd24db451285e495bb5fcb48',
+    src: env.VITE_ADSTERRA_BETWEEN_SRC || 'https://pl29671018.effectivecpmnetwork.com/a5103adadd24db451285e495bb5fcb48/invoke.js',
+    type: env.VITE_ADSTERRA_BETWEEN_TYPE || 'native',
     width: Number(env.VITE_ADSTERRA_BETWEEN_W) || 300,
     height: Number(env.VITE_ADSTERRA_BETWEEN_H) || 250,
   },
-  // Inside the Atlas modal footer.
   atlasModal: {
-    key: env.VITE_ADSTERRA_ATLAS_KEY || '',
-    src: env.VITE_ADSTERRA_ATLAS_SRC || '',
+    key: env.VITE_ADSTERRA_ATLAS_KEY || 'dd3a17b4eda18f8203e5735e8b215f90',
+    src: env.VITE_ADSTERRA_ATLAS_SRC || 'https://www.highperformanceformat.com/dd3a17b4eda18f8203e5735e8b215f90/invoke.js',
     type: env.VITE_ADSTERRA_ATLAS_TYPE || 'banner',
     width: Number(env.VITE_ADSTERRA_ATLAS_W) || 300,
     height: Number(env.VITE_ADSTERRA_ATLAS_H) || 250,
   },
-  // Bottom of the in-app country detail route.
   countryPage: {
-    key: env.VITE_ADSTERRA_COUNTRY_KEY || '',
-    src: env.VITE_ADSTERRA_COUNTRY_SRC || '',
+    key: env.VITE_ADSTERRA_COUNTRY_KEY || 'cfc6471b9ce3ae98729962be88aed550',
+    src: env.VITE_ADSTERRA_COUNTRY_SRC || 'https://www.highperformanceformat.com/cfc6471b9ce3ae98729962be88aed550/invoke.js',
     type: env.VITE_ADSTERRA_COUNTRY_TYPE || 'banner',
     width: Number(env.VITE_ADSTERRA_COUNTRY_W) || 728,
     height: Number(env.VITE_ADSTERRA_COUNTRY_H) || 90,
