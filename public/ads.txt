@@ -1,1 +1,10 @@
-google.com, pub-6930930871941912, DIRECT, f08c47fec0942fa0
+# ads.txt — authorized digital sellers for globeiq.app
+#
+# ACTIVATION: after signing up for Adsterra, copy the exact ads.txt line(s)
+# from your Adsterra dashboard (Profile → ads.txt) and replace the placeholder
+# below. It looks like:
+#   adsterra.com, <your-publisher-id>, DIRECT, <tag-id>
+#
+# (The old AdSense line was removed — AdSense rejected the site.)
+#
+# adsterra.com, REPLACE_WITH_YOUR_ADSTERRA_PUBLISHER_ID, DIRECT, REPLACE_WITH_TAG_ID

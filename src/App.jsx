@@ -24,7 +24,7 @@ import { generateShareText } from './utils/shareCard'
 import { playCorrect, playWrong, playReveal } from './utils/sound'
 import { trackEvent } from './utils/analytics'
 import AdSlot from './components/AdSlot'
-import { AD_SLOT_BETWEEN_ROUNDS } from './utils/adSlots'
+import { ADSTERRA } from './utils/adSlots'
 import countries from './data/countries'
 
 const countryNames = countries.map(c => c.name)
@@ -296,7 +296,7 @@ function App() {
                   </button>
                   <HintPanel guessCount={6} country={currentCountry} />
                   <div style={{ width: '100%', maxWidth: 480, margin: '24px auto 0' }}>
-                    <AdSlot slotId={AD_SLOT_BETWEEN_ROUNDS} />
+                    <AdSlot unit={ADSTERRA.betweenRounds} />
                   </div>
                 </>
               )}

@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import Silhouette from './Silhouette'
 import AdSlot from './AdSlot'
-import { AD_SLOT_COUNTRY_PAGE } from '../utils/adSlots'
+import { ADSTERRA } from '../utils/adSlots'
 import { getContinentTheme } from '../utils/continentTheme'
 import { findCountryBySlug, slugify } from '../utils/slug'
 import { getEnrichment } from '../utils/countryEnrichment'
@@ -231,7 +231,7 @@ export default function CountryPage({ allCountries, collectedCountries }) {
       <Link to="/" className="country-cta">Play today's puzzle →</Link>
 
       <div style={{ width: '100%', maxWidth: 640, margin: '24px auto 0' }}>
-        <AdSlot slotId={AD_SLOT_COUNTRY_PAGE} />
+        <AdSlot unit={ADSTERRA.countryPage} />
       </div>
 
       <nav className="country-nav" aria-label="Adjacent countries">

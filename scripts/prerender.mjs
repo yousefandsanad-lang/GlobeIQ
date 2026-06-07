@@ -408,7 +408,6 @@ function renderCountryHtml(country, prev, next) {
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" />
   <script type="application/ld+json">${jsonLd(placeSchema)}</script>
   <script type="application/ld+json">${jsonLd(breadcrumbSchema)}</script>
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6930930871941912" crossorigin="anonymous"></script>
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-8PQZKTB7KJ"></script>
   <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-8PQZKTB7KJ');</script>
   <style>${STYLE}</style>
