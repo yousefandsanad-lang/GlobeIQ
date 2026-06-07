@@ -70,7 +70,11 @@ export default function WorldMap({ collectedCountries = [], currentCountryId, al
       >
         {featureCollection.features.map((f, idx) => {
           const id = extractId(f)
-          const key = id ?? `noid-${idx}`
+          // Append the array index so the key is always unique: the 50m
+          // topology has features that share an ISO id (e.g. Australia and
+          // Ashmore & Cartier Is. are both "036"), which would otherwise
+          // collide and trigger React duplicate-key warnings.
+          const key = `${id ?? 'noid'}-${idx}`
           const idCoerced = id != null ? String(id) : null
           const isCurrent =
             idCoerced != null &&
