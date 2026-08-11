@@ -12,10 +12,13 @@ import GuessInput from './components/GuessInput'
 import RevealCard from './components/RevealCard'
 import WorldMap from './components/WorldMap'
 import Confetti from './components/Confetti'
+import HowToPlay from './components/HowToPlay'
 
-// Lazy-loaded: route + on-demand modals. Keeps them (and their deps — e.g. the
-// 36 KB enrichment JSON behind CountryPage) out of the initial bundle.
-const HowToPlay = lazy(() => import('./components/HowToPlay'))
+// Lazy-loaded: on-demand modals + the country-page route. Keeps them (and
+// their deps — e.g. the 36 KB enrichment JSON behind CountryPage) out of the
+// initial bundle. HowToPlay is deliberately NOT lazy: it's the first thing a
+// new visitor sees, so it's bundled eagerly rather than depending on a
+// second dynamic-import round trip succeeding before the game can render.
 const AuthModal = lazy(() => import('./components/AuthModal'))
 const AtlasModal = lazy(() => import('./components/AtlasModal'))
 const AtlasComplete = lazy(() => import('./components/AtlasComplete'))
