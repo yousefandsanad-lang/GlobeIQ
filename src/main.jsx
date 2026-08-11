@@ -12,21 +12,17 @@ import { loadWorldTopology } from './utils/topology'
 loadWorldTopology().catch(() => {})
 
 // The homepage SEO content (injected below the app at build time) has
-// "Play today's puzzle" links pointing at #globeiq-app. A bare hash anchor
-// only scrolls the FIRST time (no-op once the hash is already set), and a
-// link to "/" used to just reload in place — both felt like "nothing happens"
-// on mobile. On the first tap, let the browser's own native hash-jump handle
-// it (zero JS required, can't silently fail). Only once the hash already
-// matches — so the native jump would be a no-op — do we take over and drive
-// the scroll ourselves, so repeat taps still work.
-document.addEventListener('click', (e) => {
-  const link = e.target.closest('a[href="#globeiq-app"]')
-  if (!link) return
-  if (window.location.hash !== '#globeiq-app') return
-  e.preventDefault()
-  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' })
-})
+// "Play today's puzzle" links pointing at /?play=1 — a genuinely new URL,
+// not the page you're already on. Two JS-dependent approaches (a bare hash
+// anchor, then a hybrid native-jump-plus-scrollTo) both still reportedly did
+// nothing on at least one real phone, so this intentionally depends on
+// nothing but the browser's most basic behavior: a link to a URL you've
+// never visited has no scroll position to restore, so it always opens at
+// the top, where the game is — no JS required for the tap itself to work.
+// Once loaded, strip the query param so the URL bar stays clean.
+if (window.location.search.includes('play=1')) {
+  window.history.replaceState(null, '', window.location.pathname + window.location.hash)
+}
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
