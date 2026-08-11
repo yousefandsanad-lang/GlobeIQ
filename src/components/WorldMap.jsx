@@ -45,11 +45,12 @@ export default function WorldMap({ collectedCountries = [], currentCountryId, al
   return (
     <div
       style={{
-        position: 'fixed',
+        position: 'absolute',
         top: 0,
-        left: 0,
+        left: '50%',
         width: '100vw',
-        height: '100vh',
+        marginLeft: '-50vw',
+        height: '100%',
         zIndex: 0,
         pointerEvents: 'none',
         display: 'flex',
