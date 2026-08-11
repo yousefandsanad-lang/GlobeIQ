@@ -116,6 +116,37 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Temporary diagnostic: the game has failed to render on at least one
+      // real device with no visible error and nothing in reach to inspect it
+      // (no desktop debugging access). If ANYTHING throws before or during
+      // React's render — including a script failing to even load — show it
+      // directly on the page so it can be screenshotted. Safe to remove once
+      // the underlying issue is identified; this only ever displays anything
+      // when something has already gone wrong.
+      (function () {
+        function show(label, detail) {
+          if (document.getElementById('giq-diag')) return;
+          var box = document.createElement('div');
+          box.id = 'giq-diag';
+          box.style.cssText = 'position:fixed;inset:0;z-index:999999;background:#1a0000;' +
+            'color:#ffb3b3;font:12px/1.5 monospace;padding:16px;overflow:auto;white-space:pre-wrap;';
+          box.textContent = 'GlobeIQ failed to load.\n\n' + label + '\n\n' + detail +
+            '\n\nPlease screenshot this and send it back.';
+          document.body.appendChild(box);
+        }
+        window.addEventListener('error', function (e) {
+          show('Error: ' + (e.message || 'unknown'),
+            (e.filename ? e.filename + ':' + e.lineno + ':' + e.colno + '\n' : '') +
+            (e.error && e.error.stack ? e.error.stack : ''));
+        });
+        window.addEventListener('unhandledrejection', function (e) {
+          var r = e.reason;
+          show('Unhandled promise rejection: ' + (r && r.message ? r.message : String(r)),
+            r && r.stack ? r.stack : '');
+        });
+      })();
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
